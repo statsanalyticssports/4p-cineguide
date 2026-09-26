@@ -1,5 +1,26 @@
 # 4P CineGuide Release Notes
 
+## v1.9 — Complete Lens / ND / EV Prescription
+**Released: September 26, 2026**
+
+### Added
+- Scene-specific **Target HUD EV** recommendation with an expected post-change HUD EV estimate.
+- Explicit **Exposure Compensation: N/A — Manual (M)** labeling to distinguish the HUD meter from exposure-compensation control.
+- Automatic recommendation of **Native 1× vs DJI 108° Wide-Angle Lens**.
+- Full ND recommendation using the owned DJI set: **None / ND16 / ND64 / ND256**.
+- Lens and Black Mist actions in the prescription and verification pass.
+- Color Recovery **OFF** added to the fixed calibrated capture profile.
+
+### Corrected
+- ISO recommendations are now restricted to the actual Pocket 4P D-Log 2 manual values confirmed from the camera UI: **100 / 200 / 400 / 800 / 1600 / 3200**.
+- Removed generic 1/3-stop ISO values such as 125, 160, 250, 320, 500, and 640.
+- OCR ISO results are snapped only to valid Pocket 4P selectable ISO values.
+- Exposure math now explains the theoretical exposure-preserving ISO and then the real selectable ISO chosen by the camera-aware engine.
+
+### Verification
+- Second-pass verification checks shutter, ISO, ND, recommended lens state, HUD EV target, live-view exposure, and highlight control before returning **SETTINGS VERIFIED — SHOOT**.
+
+---
 ## v1.8 — Physical Defaults + Reliable Camera State
 **Released: September 26, 2026**
 
