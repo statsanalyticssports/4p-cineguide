@@ -107,29 +107,29 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         <h2>Physical setup</h2>
         <span class="badge soft">Confirm once</span>
       </div>
-      <p class="helper">Mimo cannot reliably identify these physical accessories. CineGuide remembers your selections on this iPhone.</p>
+      <p class="helper">Mimo cannot reliably identify these physical accessories. They default to None; change them only when an accessory is installed. CineGuide remembers your selections on this iPhone.</p>
       <div class="grid three">
         <label>Lens attachment in this screenshot
           <select id="lensMode">
-            <option value="">Unknown / confirm</option>
-            <option value="wide">1× native — no attachment</option>
+            <option value="wide" selected>None — 1× native</option>
             <option value="wide108">DJI Wide-Angle — 108°</option>
+            <option value="">Unknown / confirm</option>
           </select>
         </label>
         <label>ND used in this screenshot
           <select id="currentNd">
-            <option value="">Unknown / confirm</option>
-            <option value="0">None</option>
+            <option value="0" selected>None</option>
             <option value="4">ND16 — 4 stops</option>
             <option value="6">ND64 — 6 stops</option>
             <option value="8">ND256 — 8 stops</option>
+            <option value="">Unknown / confirm</option>
           </select>
         </label>
         <label>Black Mist in this screenshot
           <select id="currentMist">
+            <option value="off" selected>None / Off</option>
+            <option value="on">Black Mist On</option>
             <option value="">Unknown / confirm</option>
-            <option value="off">No</option>
-            <option value="on">Yes</option>
           </select>
         </label>
         <label>Subject motion
@@ -163,10 +163,10 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
           <input id="currentIso" type="number" min="50" max="51200" step="25" value="100" />
         </label>
         <label>Exposure mode
-          <input id="currentExposureMode" type="text" value="—" readonly />
+          <input id="currentExposureMode" type="text" value="M" readonly />
         </label>
         <label>HUD EV meter
-          <input id="currentEv" type="text" value="—" readonly />
+          <input id="currentEv" type="text" value="Not read" readonly />
         </label>
         <label>Calibration WB
           <input type="text" value="5600K (fixed before screenshot)" readonly />
@@ -203,8 +203,8 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </section>
 
     <section class="card disclaimer">
-      <strong>How v1.7 interprets one screenshot</strong>
-      <p>4K/24, High bitrate, D-Log 2 10-bit and the 5600K manual-WB calibration are treated as your fixed shooting profile. Mimo HUD values provide the exposure anchor. Physical ND, Black Mist and the 108° attachment still require one-tap confirmation. The DJI EV meter is supporting evidence—not an absolute instruction.</p>
+      <strong>How v1.8 interprets one screenshot</strong>
+      <p>4K/24, High bitrate, D-Log 2 10-bit and the 5600K manual-WB calibration are treated as your fixed shooting profile. Mimo HUD values provide the exposure anchor. Lens attachment, ND and Black Mist default to None; change them only when installed. The DJI EV meter is supporting evidence—not an absolute instruction.</p>
     </section>
 
     <div class="hidden" aria-hidden="true">
@@ -220,7 +220,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </div>
   </main>
 
-  <footer>4P CineGuide v1.7 • 5600K calibration workflow • fully local/offline Mimo OCR • no external runtime dependencies</footer>
+  <footer>4P CineGuide v1.8 • 5600K calibration workflow • fully local/offline Mimo OCR • no external runtime dependencies</footer>
 
   <script>
 (() => {
@@ -326,7 +326,17 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     updatePhysicalStatus();
   }
   function restorePhysical(){
-    try{ const a=localStorage.getItem('cineguide.lens'); if(a!==null)els.lensMode.value=a; const n=localStorage.getItem('cineguide.nd'); if(n!==null)els.currentNd.value=n; const m=localStorage.getItem('cineguide.mist'); if(m!==null)els.currentMist.value=m; const sm=localStorage.getItem('cineguide.motion'); if(sm)els.subjectMotion.value=sm; }catch(_){}
+    try{
+      const a=localStorage.getItem('cineguide.lens');
+      els.lensMode.value=(a==='wide108'||a==='wide')?a:'wide';
+      const n=localStorage.getItem('cineguide.nd');
+      els.currentNd.value=['0','4','6','8'].includes(n)?n:'0';
+      const m=localStorage.getItem('cineguide.mist');
+      els.currentMist.value=(m==='on'||m==='off')?m:'off';
+      const sm=localStorage.getItem('cineguide.motion'); if(sm)els.subjectMotion.value=sm;
+    }catch(_){
+      els.lensMode.value='wide'; els.currentNd.value='0'; els.currentMist.value='off';
+    }
     updatePhysicalStatus();
   }
   [els.lensMode,els.currentNd,els.currentMist,els.subjectMotion].forEach(el=>el.addEventListener('change',()=>{persistPhysical(); if(image) analyze(false,{preservePending:true});}));
@@ -337,7 +347,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     file=f; subjectPoint=null; lastRecommendation=null; lastHudRead=null; cameraStateAutoRead=false;
     els.mimoHudReadout.classList.add('hidden'); els.mimoHudReadout.innerHTML='';
     els.profileAlert.classList.add('hidden'); els.profileAlert.innerHTML='';
-    els.currentExposureMode.value='—'; els.currentEv.value='—';
+    els.currentExposureMode.value='M'; els.currentEv.value='Reading…';
     const url=URL.createObjectURL(f), img=new Image();
     img.onload=()=>{
       image=img; drawPreview(); URL.revokeObjectURL(url); els.previewWrap.classList.remove('hidden');
@@ -652,10 +662,15 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
       }
     }
 
-    if (/(?:^|\s)M(?:\s|$)/.test(t)) {
-      parsed.exposureMode='M'; els.currentExposureMode.value='M'; found.push('Manual');
-    } else if (/(?:^|\s)AUTO(?:\s|$)/.test(t)) {
+    if (/(?:^|\s)AUTO(?:\s|$)/.test(t)) {
       parsed.exposureMode='Auto'; els.currentExposureMode.value='Auto'; found.push('Auto');
+    } else if (/(?:^|\s)M(?:\s|$)/.test(t)) {
+      parsed.exposureMode='M'; els.currentExposureMode.value='M'; found.push('Manual');
+    } else {
+      // Manual exposure is part of the fixed CineGuide capture profile. If the tiny
+      // M badge is missed by OCR, keep the known profile value instead of showing a dash.
+      parsed.exposureMode='M'; els.currentExposureMode.value='M'; found.push('Manual (fixed profile)');
+      parsed.exposureModeAssumed=true;
     }
 
     m=t.match(/(?:WB|WHITE\s*BALANCE)\s*[:=]?\s*(\d{4,5})\s*K?/);
@@ -804,10 +819,45 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     return out;
   }
 
+  function buildMimoEvOcrCanvas(direction='ccw') {
+    const src=makeOrientedCanvas(direction);
+    const W=src.width,H=src.height;
+    // Tight crop around the Mimo EV number. The narrow crop preserves the tiny
+    // minus sign much more reliably than OCR'ing the entire exposure strip.
+    const r={x:W*0.52,y:H*0.84,w:W*0.10,h:H*0.15};
+    const scale=8;
+    const out=document.createElement('canvas');
+    out.width=Math.round(r.w*scale); out.height=Math.round(r.h*scale);
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.max(1,Math.round(r.w)); tmp.height=Math.max(1,Math.round(r.h));
+    const tctx=tmp.getContext('2d',{willReadFrequently:true});
+    tctx.drawImage(src,r.x,r.y,r.w,r.h,0,0,tmp.width,tmp.height);
+    const id=tctx.getImageData(0,0,tmp.width,tmp.height), d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const lum=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2];
+      const v=lum>120?0:255;
+      d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;
+    }
+    tctx.putImageData(id,0,0);
+    const octx=out.getContext('2d'); octx.fillStyle='#fff'; octx.fillRect(0,0,out.width,out.height);
+    octx.drawImage(tmp,0,0,tmp.width,tmp.height,0,0,out.width,out.height);
+    return out;
+  }
+
+  function parseDedicatedEv(text){
+    const t=normalizeHudText(text);
+    let m=t.match(/([+\-]\s*\d(?:\s*[.]\s*\d)?)/);
+    if(!m) m=t.match(/(?:^|\s)(\d[.]\d)(?=\s|$)/);
+    if(!m) return null;
+    const ev=Number(m[1].replace(/\s/g,''));
+    return Number.isFinite(ev)&&ev>=-5&&ev<=5?ev:null;
+  }
+
   async function runMimoHudOcr(worker, direction) {
     const hudCanvas=buildMimoHudOcrCanvas(direction);
     const exposureCanvas=buildMimoExposureOcrCanvas(direction);
     const fpsCanvas=buildMimoFpsOcrCanvas(direction);
+    const evCanvas=buildMimoEvOcrCanvas(direction);
     try {
       await worker.setParameters({
         tessedit_char_whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/.-:+ ',
@@ -818,11 +868,23 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     try { await worker.setParameters({tessedit_pageseg_mode:'7'}); } catch (_) {}
     const exposure=await worker.recognize(exposureCanvas);
     const fps=await worker.recognize(fpsCanvas);
-    const merged=[general?.data?.text||'', exposure?.data?.text||'', fps?.data?.text||''].join(' ');
+    try { await worker.setParameters({tessedit_char_whitelist:'0123456789+-. ',tessedit_pageseg_mode:'7'}); } catch (_) {}
+    const evOnly=await worker.recognize(evCanvas);
+    const merged=[general?.data?.text||'', exposure?.data?.text||'', fps?.data?.text||'', evOnly?.data?.text||''].join(' ');
     const parsed=parseOcrText(merged);
+    if(parsed.ev===null){
+      const ev=parseDedicatedEv(evOnly?.data?.text||'');
+      if(ev!==null){
+        parsed.ev=ev; els.currentEv.value=(ev>0?'+':'')+ev.toFixed(1);
+        parsed.found=[...new Set([...(parsed.found||[]),`EV ${els.currentEv.value}`])];
+        parsed.score += 1;
+      }
+    }
+    if(parsed.ev===null) els.currentEv.value='Not read';
     parsed.rawGeneral=normalizeHudText(general?.data?.text||'');
     parsed.rawExposure=normalizeHudText(exposure?.data?.text||'');
     parsed.rawFps=normalizeHudText(fps?.data?.text||'');
+    parsed.rawEv=normalizeHudText(evOnly?.data?.text||'');
     return parsed;
   }
 
@@ -854,11 +916,13 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         if(verificationCandidate&&pendingPrescription) verifyPending(); else analyze(false);
       } else {
         cameraStateAutoRead = false;
+        els.currentExposureMode.value='M'; if(els.currentEv.value==='Reading…') els.currentEv.value='Not read';
         setStatus('Mimo HUD was not read confidently. Confirm shutter/ISO manually, then recalculate.');
         analyze(false,{preservePending:!!pendingPrescription});
       }
     } catch(err) {
       cameraStateAutoRead = false;
+      els.currentExposureMode.value='M'; if(els.currentEv.value==='Reading…') els.currentEv.value='Not read';
       setStatus('Automatic Mimo HUD reading was unavailable; confirm shutter/ISO manually and recalculate.');
       analyze(false,{preservePending:!!pendingPrescription});
     } finally {

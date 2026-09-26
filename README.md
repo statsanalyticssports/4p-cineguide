@@ -1,4 +1,4 @@
-# 4P CineGuide v1.7
+# 4P CineGuide v1.8
 
 Phone-first cinematic Pro-settings assistant for the DJI Osmo Pocket 4P.
 
@@ -14,19 +14,27 @@ CineGuide is tuned to this normal production setup:
 - Manual WB = **5600K before the calibration screenshot**
 - Histogram / zebras / focus peaking off for the calibration screenshot
 
-## v1.7 highlights
+## v1.8 highlights
 
-- One DJI Mimo screenshot workflow.
-- Mimo screenshot is rotated upright automatically.
-- Scene analysis is limited to the actual live-view area instead of the surrounding Mimo UI.
-- HUD OCR reads Manual exposure, shutter, ISO, EV, and supported resolution/frame-rate indicators.
-- 5600K is treated as a known calibration WB anchor.
-- Current ND, 108-degree Wide-Angle attachment, and Black Mist are confirmed manually because they are physical accessories.
-- Exposure-preserving shutter/ISO conversion is shown separately from any intentional exposure correction.
-- DJI EV is used as supporting evidence rather than an absolute light-meter command.
-- Exposure, WB, and physical-setup confidence are separated.
-- Second-pass verification can report **SETTINGS VERIFIED — SHOOT**.
-- **Tesseract.js, its worker, WebAssembly cores, and English OCR language model are hosted inside the CineGuide repository and precached by the PWA. Mimo HUD OCR no longer depends on jsDelivr or another external CDN.**
+- Lens attachment now defaults to **None — 1× native**.
+- ND now defaults to **None**.
+- Black Mist now defaults to **None / Off**.
+- Previous blank/unknown physical-state values stored on the iPhone are normalized back to these None defaults.
+- Exposure Mode now defaults to **M** because Manual exposure is part of the fixed CineGuide capture profile.
+- Added a dedicated high-resolution EV OCR crop so the Mimo HUD EV value is read independently from shutter/ISO.
+- The EV reader is tuned to preserve the tiny minus sign in values such as **-2.7**.
+- If the EV number genuinely cannot be read, Current Camera State now says **Not read** instead of an ambiguous dash.
+- All v1.7 one-screenshot, calibrated-WB, live-view-only analysis, transparent exposure math, confidence, verification, and local OCR behavior are retained.
+
+## Physical setup defaults
+
+CineGuide starts each installation with:
+
+- Lens attachment: **None — 1× native**
+- ND: **None**
+- Black Mist: **None / Off**
+
+Change a value only when that physical accessory is installed. CineGuide remembers later selections on that iPhone.
 
 ## Normal workflow
 
@@ -35,7 +43,7 @@ CineGuide is tuned to this normal production setup:
 3. Keep histogram, zebras, and focus peaking off.
 4. Frame the shot in DJI Mimo and take one screenshot with the normal HUD visible.
 5. Upload it to CineGuide.
-6. Confirm physical lens / ND / Black Mist state.
+6. Change Lens / ND / Black Mist only if an accessory is actually installed.
 7. Tap the important subject if needed.
 8. Apply CineGuide's prescription.
 9. Take one verification screenshot and run **VERIFY CURRENT SETTINGS**.
@@ -43,12 +51,16 @@ CineGuide is tuned to this normal production setup:
 
 ## Offline behavior
 
-The PWA precaches the CineGuide application and local OCR dependencies. After the v1.7 assets have loaded successfully once, Mimo HUD OCR does not require a live connection to jsDelivr or another OCR CDN. The user's screenshot remains local to the browser during core analysis and OCR.
+The PWA precaches the CineGuide application and local OCR dependencies. Once the vendored OCR assets are present in the repository and cached, Mimo HUD OCR does not need an external CDN. Screenshot analysis and OCR remain local to the browser.
 
 ## Limitations
 
 - A processed Mimo screenshot is not an absolute lux meter.
-- Physical ND, Black Mist, and the 108-degree attachment still require confirmation.
+- Physical ND, Black Mist, and the 108-degree attachment cannot be reliably inferred from the HUD, so CineGuide uses the user-selected physical state.
 - WB is estimated relative to the known 5600K calibration reference and should be visually verified.
 - A still screenshot cannot reliably diagnose temporal LED/fluorescent flicker.
-- OCR remains best-effort; manual camera-state confirmation remains available.
+- OCR remains best-effort; shutter/ISO can always be corrected manually.
+
+## Release notes
+
+See [RELEASE_NOTES.md](./RELEASE_NOTES.md).

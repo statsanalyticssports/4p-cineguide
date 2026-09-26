@@ -1,5 +1,34 @@
 # 4P CineGuide Release Notes
 
+## v1.8 — Physical Defaults + Reliable Camera State
+**Released: September 26, 2026**
+
+### Changed
+- Lens Attachment now defaults to **None — 1× native**.
+- ND now defaults to **None**.
+- Black Mist now defaults to **None / Off**.
+- Stored blank/unknown physical-state values from earlier builds are normalized to the None defaults.
+- Exposure Mode now defaults to **M**, matching the fixed CineGuide capture profile.
+
+### Fixed
+- Added a dedicated, tightly cropped EV OCR pass independent of the broader exposure strip.
+- Increased EV crop scale and threshold tuning to preserve small minus signs and decimal values such as **-2.7**.
+- Current Camera State now reports **Not read** instead of `—` when EV cannot be confidently extracted.
+- Exposure Mode no longer drops back to `—` when the tiny M badge is missed by OCR; it remains **M** unless Auto is explicitly detected.
+
+### Carried forward
+- One-screenshot 5600K calibrated workflow.
+- Fixed 4K / 24 fps / High bitrate / D-Log 2 10-bit profile.
+- Upright Mimo preview and live-view-only scene analysis.
+- Automatic shutter / ISO / EV read.
+- Transparent shutter/ISO exposure math.
+- DJI EV used as corroborating evidence.
+- Separate exposure / WB / physical-setup confidence.
+- True second-pass **SETTINGS VERIFIED — SHOOT** verification.
+- Local/offline OCR asset workflow from v1.7.
+
+---
+
 ## v1.7 — Fully Local Mimo OCR
 **Released: September 26, 2026**
 

@@ -1,4 +1,4 @@
-name: Vendor offline OCR and publish v1.7
+name: Vendor offline OCR and publish v1.8
 
 on:
   workflow_dispatch:
@@ -75,26 +75,26 @@ jobs:
           if git diff --cached --quiet; then
             echo 'OCR assets are already vendored.'
           else
-            git commit -m 'Bundle local Tesseract OCR assets for CineGuide v1.7'
+            git commit -m 'Bundle local Tesseract OCR assets for CineGuide v1.8'
             git push origin HEAD:main
           fi
 
-      - name: Create or update GitHub v1.7 release
+      - name: Create or update GitHub v1.8 release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          awk 'BEGIN{p=0} /^## v1\.7/{p=1} /^---$/{if(p){exit}} p{print}' RELEASE_NOTES.md > /tmp/v17-notes.md
-          if gh release view v1.7 >/dev/null 2>&1; then
-            gh release edit v1.7 \
-              --title '4P CineGuide v1.7 — Fully Local Mimo OCR' \
-              --notes-file /tmp/v17-notes.md
+          awk 'BEGIN{p=0} /^## v1\.8/{p=1} /^---$/{if(p){exit}} p{print}' RELEASE_NOTES.md > /tmp/v18-notes.md
+          if gh release view v1.8 >/dev/null 2>&1; then
+            gh release edit v1.8 \
+              --title '4P CineGuide v1.8 — Physical Defaults + Reliable Camera State' \
+              --notes-file /tmp/v18-notes.md
           else
-            gh release create v1.7 \
+            gh release create v1.8 \
               --target main \
-              --title '4P CineGuide v1.7 — Fully Local Mimo OCR' \
-              --notes-file /tmp/v17-notes.md
+              --title '4P CineGuide v1.8 — Physical Defaults + Reliable Camera State' \
+              --notes-file /tmp/v18-notes.md
           fi
 
       - name: Request fresh GitHub Pages build
