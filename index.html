@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0f12" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="4P CineGuide" />
+  <title>4P CineGuide</title>
+  
+  
+  <style>
+:root {
+  --bg: #090b0e;
+  --panel: #11151a;
+  --panel-2: #171c22;
+  --text: #f4f6f8;
+  --muted: #9aa6b2;
+  --line: #26303a;
+  --accent: #e9f0f7;
+  --accent-text: #0b0d10;
+  --good: #b8f5cc;
+  --warn: #ffd7a3;
+  --danger: #ffb5b5;
+  --radius: 18px;
+}
+*{box-sizing:border-box}
+html{background:var(--bg);color-scheme:dark}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#0b0e12 0%,#090b0e 42%,#080a0d 100%);color:var(--text);min-height:100vh}
+button,input,select{font:inherit}
+.topbar{max-width:980px;margin:auto;padding:calc(20px + env(safe-area-inset-top)) 18px 10px;display:flex;gap:14px;justify-content:space-between;align-items:flex-start}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;color:#8f9ba7;font-weight:700}
+h1{margin:.28rem 0 .35rem;font-size:clamp(2rem,8vw,3.25rem);line-height:.95;letter-spacing:-.045em}
+.subtitle{margin:.4rem 0 0;color:var(--muted);max-width:650px;line-height:1.45}
+main{max-width:980px;margin:auto;padding:8px 14px 32px}
+.card{background:rgba(17,21,26,.92);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin:12px 0;box-shadow:0 10px 28px rgba(0,0,0,.18)}
+.hero-card{padding:12px}
+.upload-zone{min-height:150px;border:1.5px dashed #394653;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:24px;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.005))}
+.upload-zone input[type="file"]{display:block;width:100%;max-width:520px;border:1px solid #3a4754;background:#111820;color:var(--text);border-radius:12px;padding:10px;margin-top:10px}.upload-zone input[type="file"]::file-selector-button{border:0;border-radius:9px;padding:10px 12px;margin-right:10px;background:#e9eef3;color:#101418;font-weight:700;cursor:pointer}.upload-zone strong{font-size:1.05rem}.upload-zone small{color:var(--muted);max-width:430px}.upload-icon{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#202832;border:1px solid #34414d;font-size:1.6rem}
+.preview-wrap{position:relative;margin-top:12px;border-radius:14px;overflow:hidden;background:#050607;border:1px solid var(--line)}
+#previewCanvas{width:100%;display:block;max-height:65vh;object-fit:contain;touch-action:manipulation}
+.tap-hint{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(0,0,0,.66);backdrop-filter:blur(8px);padding:8px 10px;border-radius:10px;font-size:.8rem;color:#d8e0e8;pointer-events:none}.mini-btn{position:absolute;right:10px;top:10px}
+.section-title-row{display:flex;justify-content:space-between;align-items:center;gap:10px}.section-title-row h2{margin:0;font-size:1.2rem}
+.grid{display:grid;gap:12px;margin-top:14px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.compact-top{margin-top:12px}
+label{display:flex;flex-direction:column;gap:7px;color:#c7d0d9;font-size:.84rem;font-weight:650}
+select,input{width:100%;border:1px solid #303a44;background:#0d1115;color:var(--text);border-radius:11px;padding:12px 11px;outline:none}select:focus,input:focus{border-color:#687888;box-shadow:0 0 0 3px rgba(125,149,171,.13)}
+.helper,.status-text{color:var(--muted);font-size:.83rem;line-height:1.45}.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:12px;padding:11px 14px;font-weight:750;cursor:pointer}.primary{width:100%;padding:16px 18px;background:var(--accent);color:var(--accent-text);letter-spacing:.035em}.secondary,.ghost,.mini-btn{background:#1d252d;color:#eef3f7;border:1px solid #33404c}.ghost{white-space:nowrap}.mini-btn{font-size:.75rem;padding:7px 9px;background:rgba(15,19,24,.86)}
+.action-card{display:grid;gap:8px}.hidden{display:none!important}
+.badge,.confidence{display:inline-flex;align-items:center;border-radius:999px;padding:6px 9px;font-size:.73rem;font-weight:750;background:#202a33;color:#dfe8f1;border:1px solid #33414e}.badge.soft{color:#b9c6d2;background:#171d23}
+.settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0}.setting-tile{background:#0d1115;border:1px solid #29333d;border-radius:13px;padding:11px;min-height:82px}.setting-tile small{display:block;color:#8f9ba7;text-transform:uppercase;font-size:.64rem;letter-spacing:.08em;font-weight:800}.setting-tile strong{display:block;margin-top:5px;font-size:1rem;line-height:1.2}.setting-tile .sub{display:block;color:#aab5bf;font-size:.72rem;margin-top:4px;line-height:1.3}
+.callout{border-radius:13px;padding:13px 14px;background:#122019;border:1px solid #284438;color:#d8f9e4;line-height:1.45;margin-top:10px}.callout.warning{background:#241b11;border-color:#4e3924;color:#ffe4c0}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summary{cursor:pointer;font-weight:750;color:#dbe3eb}.analysis-details{margin-top:10px;color:#adb8c3;font-size:.82rem;line-height:1.55}.metric-row{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}.metric-row span:last-child{color:#edf2f6;text-align:right}.disclaimer p{margin:.5rem 0 0;color:var(--muted);font-size:.84rem;line-height:1.5}footer{text-align:center;color:#687581;font-size:.72rem;padding:8px 16px calc(28px + env(safe-area-inset-bottom))}
+@media(max-width:720px){.grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.topbar{padding-left:14px;padding-right:14px}.grid.two,.grid.three{grid-template-columns:1fr}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}.hero-card{padding:9px}}
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">DJI Osmo Pocket 4P</div>
+      <h1>4P CineGuide</h1>
+      <p class="subtitle">Upload a live-view screenshot or scene photo. Get a conservative cinematic Pro-mode prescription.</p>
+    </div>
+    <button id="installBtn" class="ghost hidden" type="button">Install</button>
+  </header>
+
+  <main>
+    <section class="card hero-card">
+      <div class="upload-zone" id="uploadZone">
+        <label for="imageInput" style="font-weight:800;margin-top:4px">Choose screenshot or photo from iPhone</label>
+        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/heic,image/heif,image/*" aria-label="Choose screenshot or photo from iPhone Photos or Files" />
+        <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none" />
+        <span class="upload-icon">＋</span>
+        <strong>Choose an image source</strong>
+        <small>For CineGuide, a DJI Mimo screenshot from Photos gives the strongest exposure anchor.</small>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px">
+          <button type="button" id="takePhotoBtn">Take New Photo</button>
+        </div>
+      </div>
+      <div id="previewWrap" class="preview-wrap hidden">
+        <canvas id="previewCanvas"></canvas>
+        <div id="tapHint" class="tap-hint">Tap the important subject to weight exposure there.</div>
+        <button id="clearSubject" class="mini-btn hidden" type="button">Clear subject</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title-row">
+        <h2>Input</h2>
+        <span id="sourceBadge" class="badge">No image</span>
+      </div>
+      <div class="grid two">
+        <label>Source type
+          <select id="sourceType">
+            <option value="mimo">DJI Mimo screenshot</option>
+            <option value="pocket">Pocket 4P frame/photo</option>
+            <option value="phone">iPhone / Galaxy photo</option>
+          </select>
+        </label>
+        <label>Lens
+          <select id="lensMode">
+            <option value="wide">1× native wide — 20mm f/2.0</option>
+            <option value="wide108">DJI Wide-Angle — 108° FOV</option>
+            <option value="tele">3× med-tele — 60mm f/1.8</option>
+          </select>
+        </label>
+        <label>Delivery
+          <select id="deliveryMode">
+            <option value="landscape">4K 16:9</option>
+            <option value="vertical">3K 9:16</option>
+          </select>
+        </label>
+        <label>Target FPS
+          <select id="targetFps">
+            <option selected>24</option><option>25</option><option>30</option><option>48</option><option>50</option><option>60</option>
+          </select>
+        </label>
+        <label>Subject motion
+          <select id="subjectMotion">
+            <option value="moving">Moving / unknown</option>
+            <option value="static">Static subject</option>
+            <option value="person">Person / portrait</option>
+          </select>
+        </label>
+      </div>
+      <div class="row-actions">
+        <button id="ocrBtn" type="button" class="secondary">Read Mimo text (beta)</button>
+        <button id="exifBtn" type="button" class="secondary">Read photo metadata</button>
+      </div>
+      <p id="readerStatus" class="status-text">Core image analysis is local. OCR/metadata helpers may require internet on first use.</p>
+    </section>
+
+    <section class="card">
+      <div class="section-title-row">
+        <h2>Current camera state</h2>
+        <span class="badge soft">Exposure anchor</span>
+      </div>
+      <p class="helper">For a Mimo screenshot, enter what the 4P was set to when that preview was captured. OCR can try to fill these.</p>
+      <div class="grid three">
+        <label>Current FPS
+          <select id="currentFps">
+            <option>24</option><option>25</option><option>30</option><option>48</option><option>50</option><option>60</option>
+          </select>
+        </label>
+        <label>Current shutter
+          <select id="currentShutter">
+            <option value="24">1/24</option><option value="25">1/25</option><option value="30">1/30</option><option value="40">1/40</option><option value="48">1/48</option><option value="50" selected>1/50</option><option value="60">1/60</option><option value="80">1/80</option><option value="100">1/100</option><option value="120">1/120</option><option value="200">1/200</option><option value="240">1/240</option><option value="400">1/400</option><option value="500">1/500</option><option value="800">1/800</option><option value="1000">1/1000</option><option value="2000">1/2000</option><option value="4000">1/4000</option><option value="8000">1/8000</option><option value="16000">1/16000</option>
+          </select>
+        </label>
+        <label>Current ISO
+          <input id="currentIso" type="number" min="50" max="51200" step="50" value="100" />
+        </label>
+        <label>Current WB
+          <input id="currentWb" type="number" min="2000" max="10000" step="100" value="5600" />
+        </label>
+        <label>Current physical ND
+          <select id="currentNd">
+            <option value="0">None</option>
+            <option value="4">ND16 — 4 stops</option>
+            <option value="6">ND64 — 6 stops</option>
+            <option value="8">ND256 — 8 stops</option>
+          </select>
+        </label>
+        <label>Preview profile
+          <select id="currentProfile">
+            <option value="dlog2">D-Log 2</option>
+            <option value="dlog">D-Log</option>
+            <option value="normal">Normal / Film Tone</option>
+          </select>
+        </label>
+      </div>
+      <div class="grid two compact-top">
+        <label>Black Mist preference
+          <select id="mistPreference">
+            <option value="auto">Auto / creative</option>
+            <option value="on">Use Black Mist</option>
+            <option value="off">Do not use</option>
+          </select>
+        </label>
+        <label>Power frequency
+          <select id="powerFrequency">
+            <option value="60">60 Hz (US/Canada)</option>
+            <option value="50">50 Hz</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="card action-card">
+      <button id="analyzeBtn" class="primary" type="button">ANALYZE FOR POCKET 4P</button>
+      <button id="verifyBtn" class="secondary hidden" type="button">VERIFY CURRENT SETTINGS</button>
+    </section>
+
+    <section id="results" class="card results hidden" aria-live="polite">
+      <div class="section-title-row">
+        <div>
+          <div class="eyebrow">Set these on your 4P</div>
+          <h2>Cinematic Pro Prescription</h2>
+        </div>
+        <div id="confidencePill" class="confidence">—</div>
+      </div>
+
+      <div id="settingsGrid" class="settings-grid"></div>
+
+      <div class="callout" id="actionCallout"></div>
+      <div class="callout warning hidden" id="warningCallout"></div>
+
+      <details>
+        <summary>Advanced analysis</summary>
+        <div id="analysisDetails" class="analysis-details"></div>
+      </details>
+    </section>
+
+    <section class="card disclaimer">
+      <strong>What this version can and cannot know</strong>
+      <p>A screenshot is already tone-mapped by the camera/app, so this tool uses its pixels as a relative exposure check—not as an absolute lux meter. Exact recommendations are strongest when the current shutter, ISO, WB and ND state are known. Always verify the result with a second Mimo screenshot before an important take.</p>
+    </section>
+  </main>
+
+  <footer>4P CineGuide v1.3 • iPhone auto-analyze • no image upload to a server by the core analyzer</footer>
+
+  <script>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const els = {
+    imageInput: $('imageInput'), cameraInput: $('cameraInput'), takePhotoBtn: $('takePhotoBtn'), previewWrap: $('previewWrap'), previewCanvas: $('previewCanvas'), tapHint: $('tapHint'), clearSubject: $('clearSubject'),
+    sourceType: $('sourceType'), lensMode: $('lensMode'), deliveryMode: $('deliveryMode'), targetFps: $('targetFps'), subjectMotion: $('subjectMotion'), sourceBadge: $('sourceBadge'),
+    ocrBtn: $('ocrBtn'), exifBtn: $('exifBtn'), readerStatus: $('readerStatus'),
+    currentFps: $('currentFps'), currentShutter: $('currentShutter'), currentIso: $('currentIso'), currentWb: $('currentWb'), currentNd: $('currentNd'), currentProfile: $('currentProfile'),
+    mistPreference: $('mistPreference'), powerFrequency: $('powerFrequency'),
+    analyzeBtn: $('analyzeBtn'), verifyBtn: $('verifyBtn'), results: $('results'), confidencePill: $('confidencePill'), settingsGrid: $('settingsGrid'), actionCallout: $('actionCallout'), warningCallout: $('warningCallout'), analysisDetails: $('analysisDetails'), installBtn: $('installBtn')
+  };
+
+  let file = null;
+  let image = null;
+  let subjectPoint = null; // normalized image coordinates
+  let lastRecommendation = null;
+  let deferredInstall = null;
+  let cameraStateAutoRead = false;
+  let autoOcrInProgress = false;
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const round100 = v => Math.round(v / 100) * 100;
+  const log2 = v => Math.log(v) / Math.LN2;
+
+  const ISO_STEPS_WIDE = [100,125,160,200,250,320,400,500,640,800,1000,1250,1600,2000,2500,3200,4000,5000,6400,8000,10000,12800,16000,20000,25600];
+  const ISO_STEPS_TELE = [50,64,80,100,125,160,200,250,320,400,500,640,800,1000,1250,1600,2000,2500,3200,4000,5000,6400,8000,10000,12800];
+  const ND_OPTIONS = [
+    {stops:0, label:'None'}, {stops:4, label:'ND16'}, {stops:6, label:'ND64'}, {stops:8, label:'ND256'}
+  ];
+
+  function registerSW() {
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+    }
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredInstall = e; els.installBtn.classList.remove('hidden');
+  });
+  els.installBtn.addEventListener('click', async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    try { await deferredInstall.userChoice; } catch (_) {}
+    deferredInstall = null; els.installBtn.classList.add('hidden');
+  });
+
+  function setStatus(msg, kind='') {
+    els.readerStatus.textContent = msg;
+    els.readerStatus.style.color = kind === 'bad' ? '#ffb5b5' : kind === 'good' ? '#b8f5cc' : '';
+  }
+
+  function drawPreview() {
+    if (!image) return;
+    const canvas = els.previewCanvas;
+    const maxW = 1400;
+    const scale = Math.min(1, maxW / image.naturalWidth);
+    canvas.width = Math.round(image.naturalWidth * scale);
+    canvas.height = Math.round(image.naturalHeight * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    if (subjectPoint) {
+      const x = subjectPoint.x * canvas.width, y = subjectPoint.y * canvas.height;
+      const r = Math.max(18, Math.min(canvas.width,canvas.height) * 0.045);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,.96)'; ctx.lineWidth = Math.max(2,canvas.width/700);
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x-r*1.35,y); ctx.lineTo(x+r*1.35,y); ctx.moveTo(x,y-r*1.35); ctx.lineTo(x,y+r*1.35); ctx.stroke();
+      ctx.restore();
+      els.clearSubject.classList.remove('hidden');
+      els.tapHint.textContent = 'Subject selected. Tap elsewhere to move the exposure priority.';
+    } else {
+      els.clearSubject.classList.add('hidden');
+      els.tapHint.textContent = 'Tap the important subject to weight exposure there.';
+    }
+  }
+
+  function handleSelectedImage(f) {
+    if (!f) return;
+    file = f; subjectPoint = null; lastRecommendation = null;
+    const url = URL.createObjectURL(f);
+    const img = new Image();
+    img.onload = () => {
+      image = img; drawPreview(); URL.revokeObjectURL(url);
+      els.previewWrap.classList.remove('hidden');
+      els.sourceBadge.textContent = `${img.naturalWidth}×${img.naturalHeight}`;
+      els.results.classList.add('hidden'); els.verifyBtn.classList.add('hidden');
+      cameraStateAutoRead = false;
+      setStatus('Image loaded. Analyzing automatically…');
+      // Show an immediate first-pass prescription, then refine it from Mimo OCR when possible.
+      setTimeout(() => {
+        try { analyze(false); } catch (_) {}
+        if (els.sourceType.value === 'mimo') autoReadMimoAndRefresh();
+        else setStatus('Automatic first-pass analysis complete. Review the prescription below.', 'good');
+      }, 80);
+    };
+    img.onerror = () => setStatus('Could not read that image.', 'bad');
+    img.src = url;
+  }
+
+  els.takePhotoBtn.addEventListener('click', () => els.cameraInput.click());
+  els.imageInput.addEventListener('change', e => handleSelectedImage(e.target.files?.[0]));
+  els.cameraInput.addEventListener('change', e => handleSelectedImage(e.target.files?.[0]));
+
+  els.previewCanvas.addEventListener('click', e => {
+    if (!image) return;
+    const rect = els.previewCanvas.getBoundingClientRect();
+    subjectPoint = { x: clamp((e.clientX - rect.left) / rect.width,0,1), y: clamp((e.clientY - rect.top) / rect.height,0,1) };
+    drawPreview();
+  });
+  els.clearSubject.addEventListener('click', () => { subjectPoint = null; drawPreview(); });
+
+  function percentileFromHist(hist, q, total) {
+    const target = total * q; let sum = 0;
+    for (let i=0;i<256;i++) { sum += hist[i]; if (sum >= target) return i/255; }
+    return 1;
+  }
+
+  function srgbToLinear(v) {
+    v /= 255;
+    return v <= 0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4);
+  }
+
+  function estimateCCT(r,g,b) {
+    const R=srgbToLinear(r), G=srgbToLinear(g), B=srgbToLinear(b);
+    const X = R*0.4124 + G*0.3576 + B*0.1805;
+    const Y = R*0.2126 + G*0.7152 + B*0.0722;
+    const Z = R*0.0193 + G*0.1192 + B*0.9505;
+    const sum = X+Y+Z;
+    if (!isFinite(sum) || sum <= 0) return null;
+    const x=X/sum, y=Y/sum;
+    const den = 0.1858-y;
+    if (Math.abs(den)<1e-5) return null;
+    const n=(x-0.3320)/den;
+    const cct=449*n*n*n + 3525*n*n + 6823.3*n + 5520.33;
+    return isFinite(cct) ? clamp(cct,2200,10000) : null;
+  }
+
+  function analyzeImagePixels() {
+    if (!image) throw new Error('Add a screenshot or photo first.');
+    const maxDim=900;
+    const scale=Math.min(1,maxDim/Math.max(image.naturalWidth,image.naturalHeight));
+    const w=Math.max(1,Math.round(image.naturalWidth*scale)), h=Math.max(1,Math.round(image.naturalHeight*scale));
+    const c=document.createElement('canvas'); c.width=w; c.height=h;
+    const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(image,0,0,w,h);
+    const data=ctx.getImageData(0,0,w,h).data;
+
+    const source=els.sourceType.value;
+    // Mimo UI occupies edges on many phone layouts. Center-safe analysis reduces icon/bar contamination.
+    const mx=source==='mimo'?0.06:0.015, myTop=source==='mimo'?0.07:0.015, myBottom=source==='mimo'?0.10:0.015;
+    const x0=Math.floor(w*mx), x1=Math.ceil(w*(1-mx)), y0=Math.floor(h*myTop), y1=Math.ceil(h*(1-myBottom));
+    const hist=new Uint32Array(256); let total=0, high=0, low=0;
+    let nr=0,ng=0,nb=0,nc=0, mr=0,mg=0,mb=0,mc=0;
+    const step=Math.max(1,Math.floor(Math.max(w,h)/700));
+    for(let y=y0;y<y1;y+=step){
+      for(let x=x0;x<x1;x+=step){
+        const i=(y*w+x)*4; const r=data[i],g=data[i+1],b=data[i+2];
+        const lum=clamp(Math.round(0.2126*r+0.7152*g+0.0722*b),0,255);
+        hist[lum]++; total++; if(lum>=250)high++; if(lum<=5)low++;
+        if(lum>35&&lum<230){ mr+=r;mg+=g;mb+=b;mc++; const max=Math.max(r,g,b),min=Math.min(r,g,b); if(max-min<24){nr+=r;ng+=g;nb+=b;nc++;} }
+      }
+    }
+    const p01=percentileFromHist(hist,.01,total), p05=percentileFromHist(hist,.05,total), p50=percentileFromHist(hist,.50,total), p95=percentileFromHist(hist,.95,total), p99=percentileFromHist(hist,.99,total);
+    const highClip=high/total, shadowClip=low/total;
+    const avgNeutral=nc>80?{r:nr/nc,g:ng/nc,b:nb/nc,count:nc}:{r:mr/Math.max(1,mc),g:mg/Math.max(1,mc),b:mb/Math.max(1,mc),count:nc};
+    const cct=estimateCCT(avgNeutral.r,avgNeutral.g,avgNeutral.b);
+
+    let subjectMedian=null;
+    if(subjectPoint){
+      const sx=subjectPoint.x*w, sy=subjectPoint.y*h, rad=Math.max(16,Math.min(w,h)*.10); const sh=new Uint32Array(256); let st=0;
+      const ax0=Math.max(0,Math.floor(sx-rad)),ax1=Math.min(w,Math.ceil(sx+rad)),ay0=Math.max(0,Math.floor(sy-rad)),ay1=Math.min(h,Math.ceil(sy+rad));
+      for(let y=ay0;y<ay1;y+=step){ for(let x=ax0;x<ax1;x+=step){ const dx=x-sx,dy=y-sy;if(dx*dx+dy*dy>rad*rad)continue; const i=(y*w+x)*4; const lum=clamp(Math.round(.2126*data[i]+.7152*data[i+1]+.0722*data[i+2]),0,255); sh[lum]++;st++; }}
+      if(st>10) subjectMedian=percentileFromHist(sh,.50,st);
+    }
+
+    const spread=p95-p05;
+    const highDR = p95>.86 && p05<.13;
+    const colorBias = {
+      warm: log2((avgNeutral.r+1)/(avgNeutral.b+1)),
+      green: log2((avgNeutral.g+1)/(((avgNeutral.r+avgNeutral.b)/2)+1))
+    };
+    return {w,h,p01,p05,p50,p95,p99,highClip,shadowClip,spread,highDR,cct,neutralCount:nc,colorBias,subjectMedian};
+  }
+
+  function exposureCorrection(m) {
+    let d=0;
+    if (m.highClip > .020 || (m.p99>.995 && m.p95>.93)) d=-0.7;
+    else if (m.highClip > .006 || (m.p99>.985 && m.p95>.90)) d=-0.3;
+    else if (m.p50 < .16 && m.p95 < .62) d=1.0;
+    else if (m.p50 < .23 && m.p95 < .72) d=.7;
+    else if (m.p50 < .30 && m.p95 < .80) d=.3;
+    else if (m.p50 > .67 && m.p95 > .95) d=-.3;
+
+    if (m.subjectMedian != null) {
+      const profile=els.currentProfile.value;
+      const target=profile==='dlog2'?.42:profile==='dlog'?.44:.50;
+      let sd=clamp(log2(target/Math.max(.035,m.subjectMedian)),-1.0,1.0);
+      if (sd>0 && m.highClip>.008) sd=0;
+      d = clamp(d*.45 + sd*.55,-1.0,1.0);
+    }
+    // Rendered Log previews and phone tone mapping are not calibrated light meters; keep changes conservative.
+    if (els.currentProfile.value==='dlog2') d*=.82;
+    if (els.sourceType.value==='phone') d*=.65;
+    return Math.round(d*10)/10;
+  }
+
+  function sceneLabel(m) {
+    const cct=m.cct||5200;
+    if(m.p50<.16) return cct<4300?'Night / warm practicals':'Night / low light';
+    if(m.highDR) return 'High-contrast / backlit';
+    if(m.p50>.58&&m.p95>.91) return cct>6100?'Bright overcast exterior':'Bright exterior';
+    if(cct<3800) return 'Warm interior / tungsten-like';
+    if(cct>6500) return 'Cool / overcast light';
+    if(m.p50<.32) return 'Dim interior / shade';
+    return 'Balanced daylight / interior';
+  }
+
+  function targetShutterForFps(fps) {
+    fps=Number(fps);
+    if(fps===24) return 50; if(fps===25) return 50; if(fps===30) return 60; if(fps===48) return 100; if(fps===50) return 100; if(fps===60) return 120;
+    return Math.round(fps*2);
+  }
+
+  function chooseExposure(delta) {
+    const curIso=clamp(Number(els.currentIso.value)||100,50,51200);
+    const curShutter=clamp(Number(els.currentShutter.value)||50,4,16000);
+    const curNd=Number(els.currentNd.value)||0;
+    const fps=Number(els.targetFps.value)||24;
+    const targetShutter=targetShutterForFps(fps);
+    const tele=els.lensMode.value==='tele';
+    const isoList=tele?ISO_STEPS_TELE:ISO_STEPS_WIDE;
+    const scene=sceneLabel(lastMetricsForExposure || {p50:.5,p95:.9,cct:5200,highDR:false});
+    const lowLight=/Night|Dim/.test(scene);
+    let best=null;
+    for(const nd of ND_OPTIONS){
+      for(const iso of isoList){
+        const achieved = log2(iso/curIso) + log2(curShutter/targetShutter) - (nd.stops-curNd);
+        const err=Math.abs(achieved-delta);
+        const isoBase=tele?50:100;
+        const isoStops=Math.max(0,log2(iso/isoBase));
+        let noisePenalty=isoStops*.035;
+        if(iso>800) noisePenalty += log2(iso/800)*.20;
+        if(iso>3200) noisePenalty += log2(iso/3200)*.48;
+        if(!lowLight && iso>1600) noisePenalty += .35;
+        // Within about one-third stop, prefer lower ISO over a numerically exact but noisier match.
+        const effectiveErr=Math.max(0,err-.34);
+        const filterPenalty=nd.stops*.004;
+        const score=effectiveErr*4+noisePenalty+filterPenalty;
+        if(!best||score<best.score) best={iso,nd,achieved,err,score,targetShutter};
+      }
+    }
+    return best;
+  }
+
+  let lastMetricsForExposure=null;
+
+  function recommendWB(m) {
+    const current=clamp(Number(els.currentWb.value)||5600,2000,10000);
+    const source=els.sourceType.value;
+    let wb=current, reason='kept from current anchor';
+    if((source==='mimo'||source==='pocket') && isFinite(m.colorBias.warm)){
+      const shift=clamp(-m.colorBias.warm*1900,-1300,1300);
+      if(Math.abs(shift)>=100){ wb=round100(clamp(current+shift,2500,8000)); reason='adjusted from neutral-pixel color bias'; }
+    } else if(source==='phone') {
+      const s=sceneLabel(m);
+      if(/Warm interior/.test(s)||/warm practicals/.test(s)) wb=3200;
+      else if(/Cool|overcast/.test(s)) wb=6200;
+      else if(/Night/.test(s)) wb=3800;
+      else if(/Dim interior/.test(s)) wb=4300;
+      else wb=5600;
+      reason='coarse scene estimate; phone auto-WB lowers confidence';
+    }
+    return {wb,reason};
+  }
+
+  function profileRecommendation() {
+    const lens=els.lensMode.value;
+    if(lens==='tele') return {label:'D-Log 10-bit', note:'D-Log 2 is restricted to 1×; use standard D-Log on 3×.'};
+    return {label:'D-Log 2 10-bit', note:'Use 1× camera; the 108° attachment remains on the 1× optical camera.'};
+  }
+
+  function focusRecommendation() {
+    const motion=els.subjectMotion.value;
+    if(motion==='static') return {label:'AFS',note:'Single AF; lock focus after tapping subject.'};
+    if(motion==='person') return {label:'AFC + Subject Lock',note:'Continuous AF with subject/face lock when useful.'};
+    return {label:'AFC — Default',note:'Continuous AF for moving or uncertain subjects.'};
+  }
+
+  function mistRecommendation(m) {
+    const pref=els.mistPreference.value;
+    if(pref==='on') return {label:'ON',note:'Creative diffusion; exposure math does not rely on it.'};
+    if(pref==='off') return {label:'OFF',note:'Maximum contrast/clean highlights.'};
+    if(m.highClip>.006 || m.highDR || m.p50<.18) return {label:'OFF / optional',note:'High-contrast or bright practicals can bloom heavily.'};
+    return {label:'Optional',note:'Use for softer highlight rolloff/halation; not required for exposure.'};
+  }
+
+  function confidenceFor(m) {
+    const source=els.sourceType.value;
+    let score=source==='mimo'?78:source==='pocket'?72:55;
+    const iso=Number(els.currentIso.value), sh=Number(els.currentShutter.value), wb=Number(els.currentWb.value);
+    if(iso&&sh) score+=8; if(wb)score+=3; if(subjectPoint)score+=5; if(m.neutralCount>150)score+=3;
+    if(source==='mimo' && !cameraStateAutoRead) score-=12;
+    if(source==='phone') score-=5; if(m.highClip>.03)score-=3;
+    score=clamp(Math.round(score),35,96);
+    const label=score>=85?'HIGH':score>=65?'MEDIUM-HIGH':score>=50?'MEDIUM':'LOW';
+    return {score,label};
+  }
+
+  function makeActionText(rec, current) {
+    const acts=[];
+    if(rec.fps!==current.fps) acts.push(`FPS ${current.fps} → ${rec.fps}`);
+    if(rec.nd.stops!==current.nd) acts.push(rec.nd.stops===0?'Remove the ND filter':`Install ${rec.nd.label}`);
+    if(rec.iso!==current.iso) acts.push(`ISO ${current.iso} → ${rec.iso}`); else acts.push(`keep ISO ${rec.iso}`);
+    if(rec.shutter!==current.shutter) acts.push(`shutter 1/${current.shutter} → 1/${rec.shutter}`); else acts.push(`keep shutter 1/${rec.shutter}`);
+    if(rec.wb!==current.wb) acts.push(`WB ${current.wb}K → ${rec.wb}K`); else acts.push(`keep WB ${rec.wb}K`);
+    return acts.join(' • ') + '.';
+  }
+
+  function settingTile(label,value,sub='') {
+    return `<div class="setting-tile"><small>${label}</small><strong>${value}</strong>${sub?`<span class="sub">${sub}</span>`:''}</div>`;
+  }
+
+  function metricRow(label,value) { return `<div class="metric-row"><span>${label}</span><span>${value}</span></div>`; }
+  const pct=v=>`${(v*100).toFixed(1)}%`;
+
+  function analyze(verify=false) {
+    try {
+      if(!image) throw new Error('Take or upload a screenshot/photo first.');
+      const m=analyzeImagePixels(); lastMetricsForExposure=m;
+      const delta=exposureCorrection(m);
+      const exp=chooseExposure(delta);
+      const wbRec=recommendWB(m), profile=profileRecommendation(), focus=focusRecommendation(), mist=mistRecommendation(m), conf=confidenceFor(m);
+      const fps=Number(els.targetFps.value)||24;
+      const delivery=els.deliveryMode.value==='vertical'?'3K 9:16':'4K 16:9';
+      const lensLabel=els.lensMode.value==='wide108'?'DJI Wide-Angle — 108°':els.lensMode.value==='tele'?'3× 60mm f/1.8':'1× 20mm f/2.0';
+      const current={fps:Number(els.currentFps.value)||24, iso:Number(els.currentIso.value)||100, shutter:Number(els.currentShutter.value)||50, wb:Number(els.currentWb.value)||5600, nd:Number(els.currentNd.value)||0};
+      const rec={fps,iso:exp.iso,nd:exp.nd,shutter:exp.targetShutter,wb:wbRec.wb,delta,metrics:m,conf,scene:sceneLabel(m)};
+      lastRecommendation=rec;
+
+      els.settingsGrid.innerHTML = [
+        settingTile('Resolution',delivery,`${fps} fps`),
+        settingTile('Lens',lensLabel,els.lensMode.value==='wide108'?'108° attachment on 1× camera':''),
+        settingTile('Color',profile.label,profile.note),
+        settingTile('Shutter',`1/${exp.targetShutter}`,`${fps===24?'180°-style target (camera-friendly 1/50)':'180°-style target'}`),
+        settingTile('ISO',String(exp.iso),exp.iso>3200?'High ISO — add light if possible':exp.iso>800?'Low-light compromise':'Quality-first'),
+        settingTile('White balance',`${wbRec.wb}K`,wbRec.reason),
+        settingTile('ND filter',exp.nd.label,`${exp.nd.stops} stop${exp.nd.stops===1?'':'s'}`),
+        settingTile('Focus',focus.label,focus.note),
+        settingTile('Black Mist',mist.label,mist.note)
+      ].join('');
+
+      els.confidencePill.textContent=`${conf.label} • ${conf.score}%`;
+      els.actionCallout.innerHTML = verify && Math.abs(delta)<=.3 && m.highClip<.01
+        ? `<strong>Settings verified. Shoot.</strong><br>The second-pass image is within the conservative exposure window. ${makeActionText(rec,current)}`
+        : `<strong>${verify?'Correction still recommended':'Set this, then verify with one more Mimo screenshot.'}</strong><br>${makeActionText(rec,current)}`;
+
+      const warnings=[];
+      if(els.sourceType.value==='mimo' && !cameraStateAutoRead) warnings.push('FIRST PASS: CineGuide has analyzed the scene, but has not yet confirmed the visible Mimo shutter/ISO/WB. The recommendation will refresh automatically if OCR reads them. Confirm the Current camera state fields if needed.');
+      if(els.sourceType.value==='phone') warnings.push('Phone photo mode uses computational exposure/WB, so treat ISO/ND as a first-pass estimate and verify with Mimo.');
+      if(m.highClip>.02) warnings.push(`Highlight clipping is substantial (${pct(m.highClip)} of analyzed pixels). Protect important highlights.`);
+      if(exp.iso>3200) warnings.push('The calculated ISO is above the preferred cinematic range. Adding light is preferable when practical.');
+      if(els.powerFrequency.value==='60' && exp.targetShutter===50) warnings.push('Under some 60 Hz LED/fluorescent fixtures, 1/50 can flicker. If you see bands/pulsing, test 1/60 and re-verify.');
+      if(els.powerFrequency.value==='50' && exp.targetShutter===60) warnings.push('Under 50 Hz lighting, test 1/50 or 1/100 if flicker appears.');
+      if(els.lensMode.value==='tele') warnings.push('D-Log 2 10-bit is a 1× mode. This prescription switches the 3× camera to standard D-Log.');
+      if(els.lensMode.value==='wide108') warnings.push('The 108° attachment widens framing; subject weighting prevents bright sky/windows at the edges from dominating the recommendation.');
+      els.warningCallout.classList.toggle('hidden',warnings.length===0);
+      els.warningCallout.innerHTML=warnings.length?`<strong>Watch-outs</strong><br>${warnings.join('<br>')}`:'';
+
+      const cctText=m.cct?`${Math.round(m.cct)} K rendered-neutral estimate`:'Not enough neutral pixels';
+      els.analysisDetails.innerHTML = [
+        metricRow('Scene classification',rec.scene),
+        metricRow('Exposure correction from current preview',`${delta>0?'+':''}${delta.toFixed(1)} stop`),
+        metricRow('Median luminance',pct(m.p50)),
+        metricRow('95th percentile',pct(m.p95)),
+        metricRow('99th percentile',pct(m.p99)),
+        metricRow('Highlight clipping',pct(m.highClip)),
+        metricRow('Shadow clipping',pct(m.shadowClip)),
+        metricRow('Tone spread (P95–P05)',pct(m.spread)),
+        metricRow('High dynamic-range warning',m.highDR?'Yes':'No'),
+        metricRow('Subject median',m.subjectMedian==null?'Not selected':pct(m.subjectMedian)),
+        metricRow('Neutral color estimate',cctText),
+        metricRow('Neutral-pixel sample',String(m.neutralCount)),
+        metricRow('Calculated exposure match error',`${exp.err.toFixed(2)} stop`),
+        metricRow('Input analysis size',`${m.w}×${m.h}`)
+      ].join('');
+
+      els.results.classList.remove('hidden'); els.verifyBtn.classList.remove('hidden');
+      els.results.scrollIntoView({behavior:'smooth',block:'start'});
+    } catch(err) {
+      alert(err.message || String(err));
+    }
+  }
+
+  els.analyzeBtn.addEventListener('click',()=>analyze(false));
+  els.verifyBtn.addEventListener('click',()=>analyze(true));
+
+  function loadScript(src, test) {
+    return new Promise((resolve,reject)=>{
+      if(test()) return resolve();
+      const s=document.createElement('script'); s.src=src; s.async=true;
+      s.onload=()=>test()?resolve():reject(new Error('Helper loaded but did not initialize.'));
+      s.onerror=()=>reject(new Error('Could not load helper. Check internet connection.'));
+      document.head.appendChild(s);
+    });
+  }
+
+  function parseOcrText(text) {
+    const t=text.replace(/[|]/g,'I').replace(/\s+/g,' ').toUpperCase();
+    const found=[];
+    let m=t.match(/ISO\s*[:=]?\s*(\d{2,5})/); if(m){els.currentIso.value=m[1]; found.push(`ISO ${m[1]}`);}
+    m=t.match(/1\s*[\/\\]\s*(\d{2,5})/); if(m){ const d=Number(m[1]); const opts=[...els.currentShutter.options].map(o=>Number(o.value)); const nearest=opts.reduce((a,b)=>Math.abs(b-d)<Math.abs(a-d)?b:a,opts[0]); els.currentShutter.value=String(nearest); found.push(`1/${nearest}`); }
+    m=t.match(/(?:WB|WHITE\s*BALANCE)\s*[:=]?\s*(\d{4,5})\s*K?/); if(m){els.currentWb.value=m[1]; found.push(`${m[1]}K`);}
+    m=t.match(/(24|25|30|48|50|60)\s*(?:FPS|P\b)/); if(m){els.currentFps.value=m[1]; found.push(`${m[1]}fps`);}
+    if(/D\s*[- ]?LOG\s*2/.test(t)){els.currentProfile.value='dlog2';found.push('D-Log 2');}
+    else if(/D\s*[- ]?LOG/.test(t)){els.currentProfile.value='dlog';found.push('D-Log');}
+    return found;
+  }
+
+  async function autoReadMimoAndRefresh() {
+    if (!file || autoOcrInProgress) return;
+    autoOcrInProgress = true;
+    try {
+      setStatus('First-pass settings shown below. Reading visible DJI Mimo settings to refine them…');
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',()=>!!window.Tesseract);
+      const worker=await window.Tesseract.createWorker('eng');
+      const res=await worker.recognize(file); await worker.terminate();
+      const found=parseOcrText(res?.data?.text||'');
+      if(found.length){
+        cameraStateAutoRead = true;
+        setStatus(`Mimo settings read: ${found.join(' • ')}. Prescription updated automatically.`, 'good');
+        analyze(false);
+      } else {
+        cameraStateAutoRead = false;
+        setStatus('Scene analyzed and settings are shown below. Mimo text was not read confidently; confirm the Current camera state fields for maximum accuracy.');
+      }
+    } catch(err) {
+      cameraStateAutoRead = false;
+      setStatus('Scene analyzed and settings are shown below. Automatic Mimo text reading was unavailable; you can still use the first-pass result or enter current settings manually.');
+    } finally {
+      autoOcrInProgress = false;
+    }
+  }
+
+  els.ocrBtn.addEventListener('click', async () => {
+    if(!file) return setStatus('Load a Mimo screenshot first.', 'bad');
+    try{
+      els.ocrBtn.disabled=true; setStatus('Loading OCR helper…');
+      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',()=>!!window.Tesseract);
+      setStatus('Reading screenshot text… this can take a little while on a phone.');
+      const worker=await window.Tesseract.createWorker('eng');
+      const res=await worker.recognize(file); await worker.terminate();
+      const found=parseOcrText(res?.data?.text||'');
+      if(found.length){ cameraStateAutoRead = true; analyze(false); }
+      setStatus(found.length?`OCR found: ${found.join(' • ')}. Prescription updated automatically.`:'OCR finished but could not confidently identify camera values. Enter them manually.',found.length?'good':'');
+    }catch(err){setStatus(`OCR unavailable: ${err.message}. Manual camera-state entry still works.`, 'bad');}
+    finally{els.ocrBtn.disabled=false;}
+  });
+
+  els.exifBtn.addEventListener('click', async () => {
+    if(!file) return setStatus('Load a photo first.', 'bad');
+    try{
+      els.exifBtn.disabled=true; setStatus('Loading metadata helper…');
+      await loadScript('https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.umd.js',()=>!!window.exifr);
+      const meta=await window.exifr.parse(file,{tiff:true,exif:true,ifd0:true});
+      const found=[];
+      if(meta?.ISO){els.currentIso.value=Math.round(meta.ISO);found.push(`ISO ${Math.round(meta.ISO)}`);}
+      if(meta?.ExposureTime){const d=Math.round(1/Number(meta.ExposureTime)); if(isFinite(d)&&d>0){ const opts=[...els.currentShutter.options].map(o=>Number(o.value)); const nearest=opts.reduce((a,b)=>Math.abs(b-d)<Math.abs(a-d)?b:a,opts[0]); els.currentShutter.value=String(nearest);found.push(`1/${nearest}`);}}
+      setStatus(found.length?`Metadata found: ${found.join(' • ')}. WB usually is not stored as a usable Kelvin value.`:'No useful ISO/shutter metadata found in this file.',found.length?'good':'');
+    }catch(err){setStatus(`Metadata helper unavailable: ${err.message}. Manual entry still works.`, 'bad');}
+    finally{els.exifBtn.disabled=false;}
+  });
+
+  registerSW();
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "4P CineGuide",
+  "short_name": "4P CineGuide",
+  "description": "Cinematic Pro-settings assistant for DJI Osmo Pocket 4P.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090b0e",
+  "theme_color": "#0d0f12",
+  "orientation": "portrait"
+}
