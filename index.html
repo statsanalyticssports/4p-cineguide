@@ -66,7 +66,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     <div>
       <div class="eyebrow">DJI Osmo Pocket 4P</div>
       <h1>4P CineGuide</h1>
-      <p class="subtitle">One Mimo screenshot. Lens + ND + ISO + shutter + WB + target EV guidance for your fixed cinematic profile.</p>
+      <p class="subtitle">One Mimo screenshot. CineGuide solves manual shutter + ISO + ND + WB, with EV-meter guidance and lens/accessory recommendations.</p>
     </div>
     <button id="installBtn" class="ghost hidden" type="button">Install</button>
   </header>
@@ -75,7 +75,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     <section class="card calibration">
       <div class="eyebrow">Before the CineGuide screenshot</div>
       <h2 style="margin:.35rem 0 .55rem">Set WB to 5600K</h2>
-      <p class="helper" style="margin:0;color:#cbe7d4">Use the fixed CineGuide calibration profile below, then take one normal DJI Mimo live-view screenshot. CineGuide will read M / shutter / ISO / EV automatically.</p>
+      <p class="helper" style="margin:0;color:#cbe7d4">Use the fixed CineGuide calibration profile below, then take one normal DJI Mimo live-view screenshot. CineGuide will read M / shutter / ISO / EV meter automatically.</p>
       <div class="profile-grid">
         <div class="profile-item"><small>Resolution</small><strong>4K • 24 fps</strong></div>
         <div class="profile-item"><small>Bitrate</small><strong>High</strong></div>
@@ -173,11 +173,11 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         <label>Exposure mode
           <input id="currentExposureMode" type="text" value="M" readonly />
         </label>
-        <label>HUD EV meter
-          <input id="currentEv" type="text" value="Not read" readonly />
+        <label>Current EV meter
+          <input id="currentEv" type="number" min="-5" max="5" step="0.1" value="" placeholder="OCR / enter meter" inputmode="decimal" />
         </label>
-        <label>Exposure compensation
-          <input id="exposureComp" type="text" value="N/A — Manual (M)" readonly />
+        <label>EV compensation
+          <input id="exposureComp" type="text" value="Auto exposure only — not used in M" readonly />
         </label>
         <label>Calibration WB
           <input type="text" value="5600K (fixed before screenshot)" readonly />
@@ -186,7 +186,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
       <div class="row-actions">
         <button id="ocrBtn" type="button" class="secondary">Re-read Mimo HUD</button>
       </div>
-      <p id="readerStatus" class="status-text">Upload a screenshot to begin.</p>
+      <p id="readerStatus" class="status-text">Upload a screenshot to begin. If OCR misses the EV meter, enter the displayed value manually.</p>
     </section>
 
     <section class="card action-card">
@@ -214,8 +214,8 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </section>
 
     <section class="card disclaimer">
-      <strong>How v1.9 interprets one screenshot</strong>
-      <p>4K/24, High bitrate, D-Log 2 10-bit, Color Recovery OFF and the 5600K manual-WB calibration are treated as your fixed shooting profile. CineGuide recommends the lens attachment, ND filter, shutter, valid D-Log 2 ISO, WB and a scene-specific HUD EV target. In Manual mode, EV is a meter target/reference; Exposure Compensation is not an independent control.</p>
+      <strong>How v2.0 interprets one screenshot</strong>
+      <p>4K/24, High bitrate, D-Log 2 10-bit, Color Recovery OFF and the 5600K manual-WB calibration are treated as your fixed shooting profile. In Manual (M), CineGuide solves shutter, valid D-Log 2 ISO and your physical ND filters. The EV number is treated as the camera meter/reference, not a fourth independent manual exposure control. EV compensation is only relevant when automatic exposure is in control.</p>
     </section>
 
     <div class="hidden" aria-hidden="true">
@@ -231,7 +231,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </div>
   </main>
 
-  <footer>4P CineGuide v1.9 • lens + ND + target EV prescription • valid D-Log 2 ISO steps • local/offline Mimo OCR</footer>
+  <footer>4P CineGuide v2.0 • audited Manual exposure solver • smart shutter + DJI ND prescription • local/offline Mimo OCR</footer>
 
   <script>
 (() => {
@@ -352,6 +352,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     updatePhysicalStatus();
   }
   [els.lensMode,els.currentNd,els.currentMist,els.subjectMotion].forEach(el=>el.addEventListener('change',()=>{persistPhysical(); if(image) analyze(false,{preservePending:true});}));
+  [els.currentShutter,els.currentIso,els.currentEv].forEach(el=>el.addEventListener('change',()=>{if(image&&!verificationCandidate)analyze(false,{preservePending:true});}));
 
   function handleSelectedImage(f) {
     if (!f) return;
@@ -359,7 +360,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     file=f; subjectPoint=null; lastRecommendation=null; lastHudRead=null; cameraStateAutoRead=false;
     els.mimoHudReadout.classList.add('hidden'); els.mimoHudReadout.innerHTML='';
     els.profileAlert.classList.add('hidden'); els.profileAlert.innerHTML='';
-    els.currentExposureMode.value='M'; els.currentEv.value='Reading…';
+    els.currentExposureMode.value='M'; els.currentEv.value='';
     const url=URL.createObjectURL(f), img=new Image();
     img.onload=()=>{
       image=img; drawPreview(); URL.revokeObjectURL(url); els.previewWrap.classList.remove('hidden');
@@ -408,7 +409,6 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     const masked=(nx,ny)=>{
       // Ignore persistent Mimo overlays while retaining as much live-view scene as possible.
       if(nx>.82) return true;                    // right controls / record button
-      if(nx<.18 && ny>.78) return true;         // histogram area
       if(nx>.36 && nx<.66 && ny>.87) return true; // shutter/ISO/EV strip
       if(nx>.64 && ny<.13) return true;         // connection / battery status
       return false;
@@ -512,22 +512,64 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   }
 
   function chooseExposure(delta) {
-    const curIso=Number(els.currentIso.value)||100,curShutter=clamp(Number(els.currentShutter.value)||50,4,16000);
-    const ndKnown=els.currentNd.value!==''; const curNd=ndKnown?Number(els.currentNd.value):0;
-    const targetShutter=50,isoList=ISO_STEPS_WIDE,scene=sceneLabel(lastMetricsForExposure||{p50:.5,p95:.9,cct:5200,highDR:false}),lowLight=/Night|Dim/.test(scene);
+    const curIso=Number(els.currentIso.value)||100;
+    const curShutter=clamp(Number(els.currentShutter.value)||50,4,16000);
+    const curNd=Number(els.currentNd.value)||0;
+    const isoList=ISO_STEPS_WIDE;
+    const scene=sceneLabel(lastMetricsForExposure||{p50:.5,p95:.9,cct:5200,highDR:false});
+    const lowLight=/Night|Dim/.test(scene);
     const targetEvInfo=lastExposureEvidence||{targetEv:-0.3,ev:null};
-    let best=null;
-    for(const nd of ND_OPTIONS){for(const iso of isoList){
-      const achieved=log2(iso/curIso)+log2(curShutter/targetShutter)-(nd.stops-curNd),err=Math.abs(achieved-delta);
-      const isoStops=Math.max(0,log2(iso/100));let noisePenalty=isoStops*.045;if(iso>800)noisePenalty+=log2(iso/800)*.22;if(iso>1600)noisePenalty+=log2(iso/1600)*.30;if(!lowLight&&iso>800)noisePenalty+=.18;
-      const effectiveErr=Math.max(0,err-.42); // actual camera ISO steps are one stop apart.
-      const filterPenalty=nd.stops*.006,changePenalty=ndKnown&&nd.stops!==curNd?.012:0;
-      const predictedEv=Number.isFinite(targetEvInfo.ev)?targetEvInfo.ev+achieved:null;
-      const evErr=predictedEv==null?0:Math.abs(predictedEv-targetEvInfo.targetEv);
-      const score=effectiveErr*4+evErr*.42+noisePenalty+filterPenalty+changePenalty;
-      if(!best||score<best.score)best={iso,nd,achieved,err,score,targetShutter,predictedEv,evErr};
-    }}
-    best.ndKnown=ndKnown;best.curNd=curNd;best.neutralIso=curIso*(targetShutter/curShutter)*Math.pow(2,best.nd.stops-curNd);
+
+    function evaluate(shutter) {
+      let best=null;
+      for(const nd of ND_OPTIONS){
+        for(const iso of isoList){
+          const achieved=log2(iso/curIso)+log2(curShutter/shutter)-(nd.stops-curNd);
+          const err=Math.abs(achieved-delta);
+
+          const isoStops=Math.max(0,log2(iso/100));
+          let noisePenalty=isoStops*.075;
+          if(iso>800)noisePenalty+=log2(iso/800)*.24;
+          if(iso>1600)noisePenalty+=log2(iso/1600)*.34;
+          if(!lowLight&&iso>800)noisePenalty+=.20;
+
+          const filterPenalty=nd.stops*.006;
+          const changePenalty=nd.stops!==curNd?.014:0;
+          const predictedEv=Number.isFinite(targetEvInfo.ev)?targetEvInfo.ev+achieved:null;
+          const evErr=predictedEv==null?0:Math.abs(predictedEv-targetEvInfo.targetEv);
+
+          // Exposure match dominates. ISO/noise and meter agreement break near-ties.
+          const effectiveErr=Math.max(0,err-.18);
+          const score=effectiveErr*5.7+evErr*.26+noisePenalty+filterPenalty+changePenalty;
+          if(!best||score<best.score)best={iso,nd,achieved,err,score,targetShutter:shutter,predictedEv,evErr};
+        }
+      }
+      return best;
+    }
+
+    // Cinematic priority: stay at 1/50 whenever the actual Pocket 4P ISO/ND grid
+    // can land within roughly half a stop. Do not abandon the 180-degree-style
+    // target merely to chase a tiny numerical exposure improvement.
+    const at50=evaluate(50);
+    let best=at50;
+    let usedFallback=false;
+
+    if(at50.err>.55){
+      // A faster shutter is an emergency exposure-control fallback for scenes that
+      // exceed the available ISO 100 + ND256 range at 1/50. It is not the default.
+      const fallback=[60,80,100,120,200,240,400,500]
+        .map(shutter=>evaluate(shutter))
+        .sort((a,b)=>a.score-b.score)[0];
+      if(fallback && fallback.err+0.20<at50.err){
+        best=fallback;
+        usedFallback=true;
+      }
+    }
+
+    best.curNd=curNd;
+    best.ndKnown=true;
+    best.usedShutterFallback=usedFallback;
+    best.neutralIso=curIso*(best.targetShutter/curShutter)*Math.pow(2,best.nd.stops-curNd);
     return best;
   }
 
@@ -546,7 +588,18 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
 
   function profileRecommendation(){return {label:'D-Log 2 10-bit',note:'Fixed profile • Color Recovery OFF for calibrated screenshot analysis.'};}
   function focusRecommendation(){const motion=els.subjectMotion.value;if(motion==='static')return{label:'AFS',note:'Single AF; lock after tapping the subject.'};if(motion==='person')return{label:'AFC + Subject Lock',note:'Continuous AF with face/subject lock when useful.'};return{label:'AFC — Default',note:'Continuous AF for moving or uncertain subjects.'};}
-  function mistRecommendation(m){if(m.highClip>.006||m.highDR||m.p50<.18)return{value:'off',label:'OFF',note:'Protect contrast around bright practicals/highlights.'};if(els.subjectMotion.value==='person')return{value:'on',label:'ON',note:'Recommended for gentle highlight diffusion on people when highlights are controlled.'};return{value:'off',label:'OFF / optional',note:'Leave off for maximum clarity; install only when you intentionally want diffusion/halation.'};}
+  function mistRecommendation(m){
+    if(m.highClip>.006||m.highDR||m.p50<.18)return{value:'off',label:'OFF',note:'Keep diffusion off while highlights/practicals are already demanding.'};
+    if(els.subjectMotion.value==='person')return{value:'off',label:'OFF / optional',note:'Black Mist is a creative look, not an exposure requirement. Add it only if you intentionally want softer halation.'};
+    return{value:'off',label:'OFF / optional',note:'Default off for maximum clarity; use only for an intentional diffusion look.'};
+  }
+
+  function fillLightRecommendation(m){
+    const scene=sceneLabel(m);
+    if(/Night|Dim/.test(scene) && els.subjectMotion.value==='person') return {label:'CONSIDER ON',note:'For a nearby person, the DJI Fill Light may allow a lower ISO. Re-run CineGuide after turning it on.'};
+    if(/Night|Dim/.test(scene)) return {label:'ADD LIGHT IF PRACTICAL',note:'Prefer adding light before accepting the noisiest ISO when the shot allows it.'};
+    return {label:'OFF',note:'Ambient light is sufficient for the current prescription.'};
+  }
 
   function confidenceFor(m,wbRec) {
     let exposure=42; if(lastHudRead?.shutter)exposure+=14;if(lastHudRead?.iso)exposure+=14;if(lastHudRead?.ev!==null&&lastHudRead?.ev!==undefined)exposure+=8;if(lastHudRead?.exposureMode==='M')exposure+=5;if(els.currentNd.value!=='')exposure+=12;if(subjectPoint)exposure+=5;if(m.highClip>.03)exposure-=5;exposure=clamp(exposure,35,96);
@@ -560,59 +613,64 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
 
   function makeActionText(rec,current,exp){
     const acts=[];
-    if(rec.lens.value!==current.lens) acts.push(rec.lens.value==='wide108'?'Lens: install DJI 108° Wide-Angle':'Lens: use native 1× / remove 108° attachment'); else acts.push(`Lens: keep ${rec.lens.value==='wide108'?'108° Wide-Angle':'native 1×'}`);
+    if(rec.lens.value!==current.lens) acts.push(rec.lens.value==='wide108'?'Lens suggestion: install DJI 108° Wide-Angle':'Lens suggestion: use native 1× / remove 108° attachment'); else acts.push(`Lens: keep ${rec.lens.value==='wide108'?'108° Wide-Angle':'native 1×'}`);
     if(rec.nd.stops!==current.nd||!current.ndKnown)acts.push(rec.nd.stops===0?'ND: use None':`ND: install ${rec.nd.label}`); else acts.push(`ND: keep ${rec.nd.label}`);
     if(rec.iso!==current.iso)acts.push(`ISO ${current.iso} → ${rec.iso}`);else acts.push(`keep ISO ${rec.iso}`);
     if(rec.shutter!==current.shutter)acts.push(`shutter 1/${current.shutter} → 1/${rec.shutter}`);else acts.push(`keep shutter 1/${rec.shutter}`);
     acts.push(`WB 5600K → ${rec.wb}K`);
-    if(rec.mist.value!==current.mist) acts.push(rec.mist.value==='on'?'Black Mist: install':'Black Mist: remove / off'); else acts.push(`Black Mist: keep ${rec.mist.value==='on'?'On':'Off'}`);
-    acts.push(`aim HUD EV ≈ ${rec.targetEv>0?'+':''}${rec.targetEv.toFixed(1)}`);
+    acts.push(`aim for EV meter ≈ ${rec.targetEv>0?'+':''}${rec.targetEv.toFixed(1)}`);
     return acts.join(' • ')+'.';
   }
   function settingTile(label,value,sub=''){return `<div class="setting-tile"><small>${label}</small><strong>${value}</strong>${sub?`<span class="sub">${sub}</span>`:''}</div>`;}
   function metricRow(label,value){return `<div class="metric-row"><span>${label}</span><span>${value}</span></div>`;} const pct=v=>`${(v*100).toFixed(1)}%`;
 
   function renderPrescription(rec,current,exp,m,wbRec,conf,verify=false){
-    const profile=profileRecommendation(),focus=focusRecommendation(),evidence=lastExposureEvidence;
+    const profile=profileRecommendation(),focus=focusRecommendation(),evidence=lastExposureEvidence,fill=fillLightRecommendation(m);
     const expectedEv=Number.isFinite(exp.predictedEv)?exp.predictedEv:null;
     els.settingsGrid.innerHTML=[
       settingTile('Resolution','4K 16:9','24 fps fixed profile'),
       settingTile('Bitrate','HIGH','Fixed profile'),
-      settingTile('Lens attachment',rec.lens.label,rec.lens.reason),
+      settingTile('Lens attachment',rec.lens.label,`${rec.lens.reason} • framing suggestion`),
       settingTile('Color',profile.label,profile.note),
-      settingTile('Shutter','1/50','180°-style 24p target'),
+      settingTile('Shutter',`1/${exp.targetShutter}`,exp.targetShutter===50?'Preferred 180°-style 24p target':'Fallback faster shutter: the available ISO/ND range could not get close enough at 1/50'),
       settingTile('ISO',String(exp.iso),'Pocket 4P D-Log 2 selectable ISO'),
       settingTile('White balance',`${wbRec.wb}K`,`${wbRec.label} confidence • ${wbRec.reason}`),
       settingTile('ND filter',exp.nd.label,`${exp.nd.stops} stop${exp.nd.stops===1?'':'s'} • from your DJI ND16/ND64/ND256 set`),
-      settingTile('Target HUD EV',`${rec.targetEv>0?'+':''}${rec.targetEv.toFixed(1)}`,`${rec.targetEvReason} • target tolerance ±0.3`),
-      settingTile('Expected HUD EV',expectedEv==null?'Verify on Mimo':`${expectedEv>0?'+':''}${expectedEv.toFixed(1)}`,expectedEv==null?'Current EV was not read':'Estimated from current HUD EV + exposure change'),
-      settingTile('Exposure compensation','N/A — Manual (M)','HUD EV is the meter/reference in the fixed manual workflow'),
+      settingTile('Target EV meter',`${rec.targetEv>0?'+':''}${rec.targetEv.toFixed(1)}`,`${rec.targetEvReason} • reference, not a fourth M-mode exposure control`),
+      settingTile('Expected EV meter',expectedEv==null?'Verify on Mimo':`${expectedEv>0?'+':''}${expectedEv.toFixed(1)}`,expectedEv==null?'Current EV meter was not read':'Estimated from the current meter + shutter/ISO/ND change'),
+      settingTile('EV compensation','Auto exposure only','Not used by CineGuide while Exposure = M'),
       settingTile('Focus',focus.label,focus.note),
-      settingTile('Black Mist',rec.mist.label,rec.mist.note)
+      settingTile('Black Mist',rec.mist.label,rec.mist.note),
+      settingTile('DJI Fill Light',fill.label,fill.note)
     ].join('');
+
     els.confidencePill.textContent=`${conf.label} • ${conf.score}%`;
     els.confidenceBreakdown.innerHTML=`<strong>Exposure:</strong> ${conf.expLabel} (${conf.exposure}%) &nbsp;•&nbsp; <strong>WB:</strong> ${conf.wbLabel} (${conf.wb}%) &nbsp;•&nbsp; <strong>Physical:</strong> ${conf.physLabel}`;
     const neutral=Math.max(100,Math.round(exp.neutralIso/10)*10),change=exp.achieved;
-    const why=evidence?.ev!=null?`Live-view analysis calls for ${evidence.imageDelta>0?'+':''}${evidence.imageDelta.toFixed(1)} stop. Current HUD EV ${evidence.ev.toFixed(1)} is ${evidence.agreement}; scene target is ${evidence.targetEv>0?'+':''}${evidence.targetEv.toFixed(1)}.`:`Live-view analysis calls for ${evidence?.imageDelta>0?'+':''}${(evidence?.imageDelta||0).toFixed(1)} stop; HUD EV was unavailable.`;
-    els.actionCallout.innerHTML=`<strong>${verify?'Verification result':'Set this, then take one verification screenshot.'}</strong><br>${makeActionText(rec,current,exp)}<br><span style="color:#b8d7c3">Exposure math:</span> at 1/50 with ${exp.nd.label}, exposure-preserving ISO is about ${neutral}; because the real camera only offers ISO 100/200/400/800/1600/3200, CineGuide selects ISO ${exp.iso}. The recommendation changes exposure by ${change>=0?'+':''}${change.toFixed(2)} stop vs the uploaded camera state. ${why}`;
+    const why=evidence?.ev!=null?`Live-view analysis calls for ${evidence.imageDelta>0?'+':''}${evidence.imageDelta.toFixed(1)} stop. Current EV meter ${evidence.ev.toFixed(1)} ${evidence.agreement} the image evidence; scene meter target is ${evidence.targetEv>0?'+':''}${evidence.targetEv.toFixed(1)}.`:`Live-view analysis calls for ${evidence?.imageDelta>0?'+':''}${(evidence?.imageDelta||0).toFixed(1)} stop; the EV meter was unavailable, so exposure was solved from the image only.`;
+    els.actionCallout.innerHTML=`<strong>${verify?'Verification result':'Set this, then take one verification screenshot.'}</strong><br>${makeActionText(rec,current,exp)}<br><span style="color:#b8d7c3">Exposure math:</span> at 1/${exp.targetShutter} with ${exp.nd.label}, exposure-preserving ISO is about ${neutral}; because the camera offers ISO 100/200/400/800/1600/3200, CineGuide selects ISO ${exp.iso}. The shutter + ISO + ND move changes exposure by ${change>=0?'+':''}${change.toFixed(2)} stop vs the uploaded camera state. ${why}`;
+
     const warnings=[];
     if(lastHudRead?.fps&&lastHudRead.fps!==24)warnings.push(`Mimo appears to show ${lastHudRead.fps} fps. Your CineGuide profile requires 24 fps.`);
     if(lastHudRead?.exposureMode&&lastHudRead.exposureMode!=='M')warnings.push('Exposure mode is not Manual. Set M before using the prescription.');
     if(m.highClip>.02)warnings.push(`Highlight clipping is substantial (${pct(m.highClip)}). Protect important highlights.`);
     if(exp.iso>=3200)warnings.push('ISO 3200 is the top D-Log 2 option in this CineGuide profile. Add light if possible rather than pushing exposure further.');
-    if(current.lens!==rec.lens.value)warnings.push(rec.lens.value==='wide108'?'CineGuide recommends installing the DJI 108° Wide-Angle attachment for this framing.':'CineGuide recommends the native 1× lens for more natural perspective.');
-    warnings.push('Under some 60 Hz LED/fluorescent fixtures, 1/50 can flicker. If bands/pulsing appear, test 1/60 and re-verify.');
+    if(exp.targetShutter!==50)warnings.push(`CineGuide selected 1/${exp.targetShutter} only because the available ISO/ND range could not get close enough at 1/50. Motion will look crisper than the normal cinematic target.`);
+    if(current.lens!==rec.lens.value)warnings.push(rec.lens.value==='wide108'?'Framing suggestion: consider the DJI 108° Wide-Angle attachment.':'Framing suggestion: native 1× gives more natural perspective.');
+    warnings.push('A single screenshot cannot detect temporal LED/fluorescent flicker. If 1/50 shows bands/pulsing under 60 Hz lighting, 1/60 is the first shutter to test.');
     els.warningCallout.classList.toggle('hidden',warnings.length===0);els.warningCallout.innerHTML=warnings.length?`<strong>Watch-outs</strong><br>${warnings.join('<br>')}`:'';
+
     const cctText=m.cct?`${Math.round(m.cct)} K rendered-neutral estimate`:'Not enough neutral pixels';
     els.analysisDetails.innerHTML=[
       metricRow('Analyzed region',m.analysisRegion),metricRow('Scene classification',rec.scene),
-      metricRow('Current HUD EV',evidence.ev==null?'Unavailable':`${evidence.ev.toFixed(1)}`),
-      metricRow('Recommended HUD EV target',`${rec.targetEv>0?'+':''}${rec.targetEv.toFixed(1)} ±0.3`),
-      metricRow('Expected HUD EV after settings',expectedEv==null?'Unavailable':`${expectedEv>0?'+':''}${expectedEv.toFixed(1)}`),
+      metricRow('Current EV meter',evidence.ev==null?'Unavailable':`${evidence.ev.toFixed(1)}`),
+      metricRow('Recommended EV meter target',`${rec.targetEv>0?'+':''}${rec.targetEv.toFixed(1)} ±0.3`),
+      metricRow('Expected EV meter after settings',expectedEv==null?'Unavailable':`${expectedEv>0?'+':''}${expectedEv.toFixed(1)}`),
       metricRow('Live-view exposure correction',`${evidence.delta>0?'+':''}${evidence.delta.toFixed(1)} stop`),
       metricRow('Image-only correction',`${evidence.imageDelta>0?'+':''}${evidence.imageDelta.toFixed(1)} stop`),
-      metricRow('DJI EV evidence',evidence.ev==null?'Unavailable':`${evidence.agreement}`),
-      metricRow('Exposure compensation','N/A — Manual (M)'),metricRow('Median luminance',pct(m.p50)),metricRow('95th percentile',pct(m.p95)),metricRow('99th percentile',pct(m.p99)),metricRow('Highlight clipping',pct(m.highClip)),metricRow('Shadow clipping',pct(m.shadowClip)),metricRow('Tone spread',pct(m.spread)),metricRow('Subject median',m.subjectMedian==null?'Not selected':pct(m.subjectMedian)),metricRow('Neutral color estimate',cctText),metricRow('Neutral-pixel sample',String(m.neutralCount)),metricRow('Exposure match error',`${exp.err.toFixed(2)} stop`)
+      metricRow('EV meter evidence',evidence.ev==null?'Unavailable':`${evidence.agreement}`),
+      metricRow('EV compensation','Auto modes only — not used in M'),
+      metricRow('Median luminance',pct(m.p50)),metricRow('95th percentile',pct(m.p95)),metricRow('99th percentile',pct(m.p99)),metricRow('Highlight clipping',pct(m.highClip)),metricRow('Shadow clipping',pct(m.shadowClip)),metricRow('Tone spread',pct(m.spread)),metricRow('Subject median',m.subjectMedian==null?'Not selected':pct(m.subjectMedian)),metricRow('Neutral color estimate',cctText),metricRow('Neutral-pixel sample',String(m.neutralCount)),metricRow('Exposure match error',`${exp.err.toFixed(2)} stop`)
     ].join('');
     els.results.classList.remove('hidden');els.verifyBtn.classList.remove('hidden');els.newSceneBtn.classList.remove('hidden');
   }
@@ -622,7 +680,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
       if(!image)throw new Error('Upload a Mimo screenshot first.');
       const m=analyzeImagePixels();lastMetricsForExposure=m;const evd=exposureCorrection(m),exp=chooseExposure(evd.delta),wbRec=recommendWB(m),conf=confidenceFor(m,wbRec);
       const lens=recommendLens(m),mist=mistRecommendation(m),current={fps:24,iso:Number(els.currentIso.value)||100,shutter:Number(els.currentShutter.value)||50,wb:5600,nd:Number(els.currentNd.value)||0,ndKnown:true,lens:els.lensMode.value||'wide',mist:els.currentMist.value||'off'};
-      const rec={fps:24,iso:exp.iso,nd:exp.nd,shutter:50,wb:wbRec.wb,delta:evd.delta,metrics:m,conf,scene:sceneLabel(m),lens,mist,targetEv:evd.targetEv,targetEvReason:evd.targetEvReason};lastRecommendation=rec;
+      const rec={fps:24,iso:exp.iso,nd:exp.nd,shutter:exp.targetShutter,wb:wbRec.wb,delta:evd.delta,metrics:m,conf,scene:sceneLabel(m),lens,mist,targetEv:evd.targetEv,targetEvReason:evd.targetEvReason};lastRecommendation=rec;
       if(!opts.preservePending&&!verificationCandidate)pendingPrescription=JSON.parse(JSON.stringify({fps:rec.fps,iso:rec.iso,nd:rec.nd,shutter:rec.shutter,wb:rec.wb,scene:rec.scene,lens:rec.lens,mist:rec.mist,targetEv:rec.targetEv,targetEvReason:rec.targetEvReason}));
       renderPrescription(rec,current,exp,m,wbRec,conf,verify);
       if(!verify)els.results.scrollIntoView({behavior:'smooth',block:'start'});
@@ -635,27 +693,32 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     const curNd=Number(els.currentNd.value)||0,iso=Number(els.currentIso.value)||0,sh=Number(els.currentShutter.value)||0,currentLens=els.lensMode.value||'wide',currentMist=els.currentMist.value||'off';
     const hudMatch=sh===pendingPrescription.shutter&&iso===pendingPrescription.iso;
     const ndMatch=curNd===pendingPrescription.nd.stops;
-    const lensMatch=currentLens===pendingPrescription.lens.value;
-    const mistRequired=pendingPrescription.mist.value==='on';
-    const mistMatch=!mistRequired||currentMist==='on';
     const evNow=parseFloat(String(els.currentEv.value));
-    const evMatch=!Number.isFinite(evNow)||Math.abs(evNow-pendingPrescription.targetEv)<=0.4;
+    const evMatch=!Number.isFinite(evNow)||Math.abs(evNow-pendingPrescription.targetEv)<=0.5;
     const imageOk=Math.abs(evd.imageDelta)<=.40&&m.highClip<.015;
-    if(hudMatch&&ndMatch&&lensMatch&&mistMatch&&evMatch&&imageOk){
+    const exposureCoreMatch=hudMatch&&ndMatch&&evMatch&&imageOk;
+
+    if(exposureCoreMatch){
       const wbRec={wb:pendingPrescription.wb,reason:'prescribed WB; normal Mimo HUD does not expose Kelvin for verification',score:68,label:'ASSUMED APPLIED'};
-      const exp={iso:iso,nd:pendingPrescription.nd,targetShutter:sh,neutralIso:iso,achieved:0,err:0,ndKnown:true,predictedEv:Number.isFinite(evNow)?evNow:null},conf=confidenceFor(m,wbRec);
+      const exp={iso,nd:pendingPrescription.nd,targetShutter:sh,neutralIso:iso,achieved:0,err:0,ndKnown:true,predictedEv:Number.isFinite(evNow)?evNow:null},conf=confidenceFor(m,wbRec);
       const current={fps:24,iso,shutter:sh,wb:pendingPrescription.wb,nd:curNd,ndKnown:true,lens:currentLens,mist:currentMist};
       renderPrescription({...pendingPrescription,scene:pendingPrescription.scene},current,exp,m,wbRec,{...conf,score:Math.max(conf.score,92),label:'HIGH'},true);
-      els.actionCallout.innerHTML=`<strong>SETTINGS VERIFIED — SHOOT.</strong><br>HUD matches 1/${sh}, ISO ${iso}, ${pendingPrescription.nd.label}${Number.isFinite(evNow)?`, HUD EV ${evNow>0?'+':''}${evNow.toFixed(1)}`:''}; lens/physical setup matches the prescription, live-view exposure is within the verification window and highlights are controlled. WB ${pendingPrescription.wb}K is treated as applied because Kelvin is not shown in the normal Mimo HUD.`;
+      const framingNote=currentLens===pendingPrescription.lens.value?'Lens framing matches the suggestion.':'Exposure is verified; the optional lens framing suggestion was not applied.';
+      els.actionCallout.innerHTML=`<strong>SETTINGS VERIFIED — SHOOT.</strong><br>Mimo matches 1/${sh}, ISO ${iso}, ${pendingPrescription.nd.label}${Number.isFinite(evNow)?`, EV meter ${evNow>0?'+':''}${evNow.toFixed(1)}`:''}; live-view exposure is within the verification window and highlights are controlled. ${framingNote} WB ${pendingPrescription.wb}K is treated as applied because Kelvin is not shown in the normal Mimo HUD. Black Mist is creative and does not block verification.`;
       pendingPrescription=null;verificationCandidate=false;
     }else{
       const exp=chooseExposure(evd.delta);
       const wbRec={wb:pendingPrescription.wb,reason:'keep the WB prescribed from the 5600K calibration screenshot',score:68,label:'PRESCRIBED'};
       const lens=pendingPrescription.lens,mist=pendingPrescription.mist,conf=confidenceFor(m,wbRec),current={fps:24,iso,shutter:sh,wb:pendingPrescription.wb,nd:curNd,ndKnown:true,lens:currentLens,mist:currentMist};
-      const corrected={...pendingPrescription,iso:exp.iso,nd:exp.nd,shutter:50,wb:pendingPrescription.wb,scene:pendingPrescription.scene,lens,mist,targetEv:pendingPrescription.targetEv,targetEvReason:pendingPrescription.targetEvReason};
+      const corrected={...pendingPrescription,iso:exp.iso,nd:exp.nd,shutter:exp.targetShutter,wb:pendingPrescription.wb,scene:pendingPrescription.scene,lens,mist,targetEv:pendingPrescription.targetEv,targetEvReason:pendingPrescription.targetEvReason};
       renderPrescription(corrected,current,exp,m,wbRec,conf,true);
       pendingPrescription=JSON.parse(JSON.stringify(corrected));
-      els.actionCallout.innerHTML=`<strong>Correction still needed.</strong><br>${!hudMatch?'HUD shutter/ISO does not yet match the prescription. ':''}${!ndMatch?'Install/confirm the prescribed ND. ':''}${!lensMatch?'Install/remove the 108° lens as prescribed. ':''}${!mistMatch?'Install Black Mist as prescribed. ':''}${!evMatch?'HUD EV is not yet within about ±0.4 of the target. ':''}${!imageOk?'The verification frame is still outside the exposure/highlight window. ':''}Updated exposure target: 1/${corrected.shutter}, ISO ${corrected.iso}, ${corrected.nd.label}, HUD EV ≈ ${corrected.targetEv>0?'+':''}${corrected.targetEv.toFixed(1)}. Keep WB ${corrected.wb}K, then verify again.`;
+      const issues=[];
+      if(!hudMatch)issues.push('shutter/ISO does not yet match');
+      if(!ndMatch)issues.push(`ND should be ${pendingPrescription.nd.label}`);
+      if(!evMatch)issues.push(`EV meter is not yet near ${pendingPrescription.targetEv>0?'+':''}${pendingPrescription.targetEv.toFixed(1)}`);
+      if(!imageOk)issues.push('live-view exposure/highlights are still outside the verification window');
+      els.actionCallout.innerHTML=`<strong>Correction still needed.</strong><br>${issues.join(' • ')}.<br>Updated Manual exposure: 1/${corrected.shutter}, ISO ${corrected.iso}, ${corrected.nd.label}; aim for EV meter ≈ ${corrected.targetEv>0?'+':''}${corrected.targetEv.toFixed(1)}. Keep WB ${corrected.wb}K, then verify again. Lens and Black Mist remain framing/look recommendations rather than exposure requirements.`;
     }
   }
 
@@ -846,6 +909,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     if(parsed.wb) visible.push(`${parsed.wb}K`);
     if(parsed.profile) visible.push(parsed.profile==='dlog2'?'D-Log 2':'D-Log');
     const missing=[];
+    if(parsed.ev===null || parsed.ev===undefined) missing.push('EV meter (enter manually if OCR misses it)');
     missing.push('physical ND / Black Mist / 108° attachment');
     els.mimoHudReadout.innerHTML =
       `<strong>Read from Mimo HUD:</strong> ${visible.join(' • ')}`+
@@ -930,11 +994,13 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
 
   function parseDedicatedEv(text){
     const t=normalizeHudText(text);
-    let m=t.match(/([+\-]\s*\d(?:\s*[.]\s*\d)?)/);
-    if(!m) m=t.match(/(?:^|\s)(\d[.]\d)(?=\s|$)/);
-    if(!m) return null;
-    const ev=Number(m[1].replace(/\s/g,''));
-    return Number.isFinite(ev)&&ev>=-5&&ev<=5?ev:null;
+    const signed=t.match(/([+\-]\s*\d(?:\s*[.]\s*\d)?)/);
+    if(signed){
+      const ev=Number(signed[1].replace(/\s/g,''));
+      return Number.isFinite(ev)&&ev>=-5&&ev<=5?ev:null;
+    }
+    const zero=t.match(/(?:^|\s)0(?:[.]0)?(?=\s|$)/);
+    return zero?0:null;
   }
 
   async function runMimoHudOcr(worker, direction) {
@@ -964,7 +1030,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         parsed.score += 1;
       }
     }
-    if(parsed.ev===null) els.currentEv.value='Not read';
+    // If EV OCR fails, leave the field blank so the user can enter the meter manually.
     parsed.rawGeneral=normalizeHudText(general?.data?.text||'');
     parsed.rawExposure=normalizeHudText(exposure?.data?.text||'');
     parsed.rawFps=normalizeHudText(fps?.data?.text||'');
@@ -1000,14 +1066,14 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         if(verificationCandidate&&pendingPrescription) verifyPending(); else analyze(false);
       } else {
         cameraStateAutoRead = false;
-        els.currentExposureMode.value='M'; if(els.currentEv.value==='Reading…') els.currentEv.value='Not read';
-        setStatus('Mimo HUD was not read confidently. Confirm shutter/ISO manually, then recalculate.');
+        els.currentExposureMode.value='M';
+        setStatus('Mimo HUD was not read confidently. Confirm shutter / ISO / EV meter manually, then recalculate.');
         analyze(false,{preservePending:!!pendingPrescription});
       }
     } catch(err) {
       cameraStateAutoRead = false;
-      els.currentExposureMode.value='M'; if(els.currentEv.value==='Reading…') els.currentEv.value='Not read';
-      setStatus('Automatic Mimo HUD reading was unavailable; confirm shutter/ISO manually and recalculate.');
+      els.currentExposureMode.value='M';
+      setStatus('Automatic Mimo HUD reading was unavailable; confirm shutter / ISO / EV meter manually and recalculate.');
       analyze(false,{preservePending:!!pendingPrescription});
     } finally {
       autoOcrInProgress = false;
@@ -1037,7 +1103,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         if(verificationCandidate&&pendingPrescription) verifyPending(); else analyze(false,{preservePending:!!pendingPrescription});
         setStatus(`HUD found: ${parsed.found.join(' • ')}. Prescription updated automatically.`,'good');
       } else {
-        setStatus('HUD OCR finished but could not confidently identify camera values. Confirm shutter/ISO manually.','');
+        setStatus('HUD OCR finished but could not confidently identify camera values. Confirm shutter / ISO / EV meter manually.','');
       }
     }catch(err){setStatus(`Local HUD OCR unavailable: ${err.message}. Manual camera-state entry still works.`, 'bad');}
     finally{els.ocrBtn.disabled=false;}

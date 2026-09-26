@@ -1,70 +1,116 @@
-# 4P CineGuide v1.9
+# 4P CineGuide v2.0
 
 Phone-first cinematic Pro-settings assistant for the DJI Osmo Pocket 4P.
 
-## Fixed shooting profile
+## Fixed production profile
 
-CineGuide is tuned to the user's normal production profile:
+CineGuide v2.0 is tuned to the user's normal Pocket 4P workflow:
 
-- **4K**
-- **24 fps**
-- **High bitrate**
-- **D-Log 2 10-bit**
-- **Color Recovery OFF** for the calibration screenshot
-- **Manual exposure (M)**
-- **1/50 target shutter**
+- 4K 16:9
+- 24 fps
+- High bitrate
+- D-Log 2 10-bit
+- Color Recovery OFF for the calibration screenshot
+- Manual exposure (M)
 - Manual WB = **5600K before the calibration screenshot**
-- Histogram / zebras / focus peaking off for the calibration screenshot
+- Histogram OFF
+- Zebras / overexposure warning OFF
+- Focus peaking OFF
 
-## v1.9 highlights
+## Owned optical accessories encoded in the solver
 
-- Uses only the Pocket 4P D-Log 2 manual ISO choices confirmed from the camera UI: **100, 200, 400, 800, 1600, 3200**.
-- Recommends one of the user's actual DJI ND choices: **None, ND16, ND64, ND256**.
-- Recommends **Native 1×** or the official **DJI 108° Wide-Angle Lens** using scene/subject heuristics.
-- Recommends a **scene-specific Target HUD EV** and clearly distinguishes it from Exposure Compensation.
-- In the fixed full-Manual workflow, **Exposure Compensation = N/A**; the HUD EV value is the meter/reference CineGuide wants the final settings to approach.
-- Shows **Expected HUD EV** after the recommended shutter/ISO/ND move when current EV was read.
-- Explains the exposure-preserving ISO at 1/50, then shows why the nearest real 4P ISO step was chosen.
-- Includes lens and Black Mist actions in the final prescription and verification.
-- Second-pass verification checks shutter, ISO, ND, lens, exposure image quality, and HUD EV target.
-- Retains local/offline Tesseract HUD OCR from v1.7/v1.8.
+### DJI Osmo Pocket 4P ND Filter Set
+- None — 0 stops
+- ND16 — 4 stops
+- ND64 — 6 stops
+- ND256 — 8 stops
 
-## Physical accessories CineGuide knows about
+### Lens / diffusion
+- Native 1× lens — default
+- DJI Osmo Pocket 4P Wide-Angle Lens — 108° FOV
+- DJI Black Mist — default OFF; treated as a creative look, not exposure control
 
-- DJI Osmo Pocket 4P Wide-Angle Lens — **108° FOV**
-- DJI Osmo Pocket 4P ND Filter Set:
-  - **ND16 — 4 stops**
-  - **ND64 — 6 stops**
-  - **ND256 — 8 stops**
-- DJI Black Mist Filter
+Physical accessory controls default to **None / Off**.
 
-Physical setup fields default to **None / Off** and can be changed when an accessory is installed.
+## Manual exposure model
 
-## Normal workflow
+v2.0 separates two concepts that can look similar in DJI Mimo:
 
-1. Set 4P to 4K / 24 fps / High / D-Log 2 10-bit / Color Recovery OFF / Manual exposure.
-2. Set WB to **5600K**.
-3. Keep histogram, zebras, and focus peaking off.
-4. Take one normal DJI Mimo live-view screenshot.
-5. Upload it to CineGuide.
-6. Confirm what physical accessories are currently installed (defaults are None).
-7. Tap the important subject when useful.
-8. Apply CineGuide's complete prescription: lens, ND, shutter, ISO, WB, target HUD EV, focus, Black Mist.
-9. Take one verification screenshot and run **VERIFY CURRENT SETTINGS**.
-10. Record after **SETTINGS VERIFIED — SHOOT**.
+- **EV compensation** is an adjustable control when automatic exposure behavior is being used.
+- In CineGuide's fixed **Manual (M)** workflow, the displayed EV value is treated as the **camera's exposure-meter reference**. CineGuide changes shutter, ISO and physical ND to move that meter toward a scene-appropriate reference; it does not treat EV as a fourth independent manual exposure variable.
 
-## EV terminology
+The current EV field remains editable so an OCR miss can be corrected manually.
 
-CineGuide shows:
+## Pocket 4P D-Log 2 ISO values used
 
-- **Current HUD EV** — what Mimo meters for the uploaded manual-exposure frame.
-- **Target HUD EV** — CineGuide's scene-specific meter target/reference.
-- **Expected HUD EV** — estimate after the recommended exposure changes, when current EV is known.
-- **Exposure Compensation** — **N/A in Manual (M)**. CineGuide does not tell the user to dial a separate compensation value in the fixed manual workflow.
+CineGuide recommends only the ISO choices confirmed on the user's Pocket 4P in this workflow:
 
-## Offline behavior
+- ISO 100
+- ISO 200
+- ISO 400
+- ISO 800
+- ISO 1600
+- ISO 3200
 
-The PWA precaches the application and vendored Tesseract OCR dependencies. Once the OCR assets have been populated by the included GitHub workflow and cached, Mimo HUD OCR does not require an external CDN.
+It will never recommend intermediate values such as ISO 160, 250, 320 or 640.
+
+## Shutter strategy
+
+For 24 fps, **1/50 is the preferred cinematic shutter**.
+
+v2.0 first solves exposure at 1/50 using the real ISO choices and the owned ND set. It remains at 1/50 whenever that grid can land within roughly half a stop. A faster shutter is only considered as an exposure-control fallback when the available ISO/ND range cannot get close enough at 1/50.
+
+This prevents small numerical exposure differences from unnecessarily overriding the preferred 24p motion cadence.
+
+## One-screenshot workflow
+
+1. Set the Pocket 4P to the fixed production profile above.
+2. Set manual WB to **5600K**.
+3. Confirm which physical accessories are installed; defaults are None / Off.
+4. Frame the scene in DJI Mimo.
+5. Take one screenshot with the normal HUD visible.
+6. Upload it to CineGuide.
+7. CineGuide rotates the Mimo view upright, isolates the live-view image, and reads Manual mode / shutter / ISO / EV where possible.
+8. Tap the important subject if exposure should be weighted there.
+9. Apply the prescription: lens suggestion, shutter, ISO, ND, WB, target EV-meter reference, focus and Black Mist guidance.
+10. Take one verification screenshot and tap **VERIFY CURRENT SETTINGS**.
+11. Record after **SETTINGS VERIFIED — SHOOT**.
+
+## What v2.0 analyzes
+
+- The actual Mimo live-view region, rather than the full phone screenshot UI
+- Highlight clipping and shadow clipping
+- Tonal percentiles and contrast spread
+- User-selected subject luminance
+- Scene color relative to the known 5600K calibration WB
+- Current shutter / ISO / EV meter from the Mimo HUD
+- Current physical ND state
+- Available Pocket 4P ISO steps
+- Available DJI ND filters
+- Scene-appropriate EV-meter reference
+
+## Lens and Black Mist recommendations
+
+The 108° Wide-Angle Lens is a **framing recommendation**, not an exposure requirement. CineGuide may suggest it for appropriate establishing/interior coverage, while preferring native 1× for people or specific subjects where more natural perspective is desirable.
+
+Black Mist is treated as a **creative diffusion option**. It does not block exposure verification.
+
+## DJI Fill Light
+
+For dark scenes, CineGuide can suggest adding light before accepting unnecessarily high ISO. For a nearby person in low light it can specifically suggest considering the DJI Fill Light, then re-running CineGuide after the lighting change.
+
+## Offline OCR
+
+The repository workflow vendors a pinned local Tesseract.js OCR runtime, worker, English language data and WebAssembly cores under `vendor/tesseract/`. The PWA service worker precaches those resources. Once installed/cached, Mimo HUD OCR does not depend on an external OCR CDN.
+
+## Important limitations
+
+- A processed Mimo screenshot is not an absolute lux meter.
+- The Mimo EV number is used as supporting meter evidence; scene pixels and highlight protection remain primary.
+- One still screenshot cannot reliably diagnose temporal LED/fluorescent flicker.
+- WB is estimated relative to the known 5600K calibration frame and should still be judged visually on critical work.
+- Lens choice is ultimately compositional; CineGuide's 108° recommendation is advisory.
+- OCR is best-effort and all recognized exposure values can be corrected manually.
 
 ## Release notes
 

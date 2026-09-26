@@ -1,4 +1,4 @@
-const CACHE = "4p-cineguide-v1.9";
+const CACHE = "4p-cineguide-v2.0";
 const CORE = [
   "./",
   "./index.html",
