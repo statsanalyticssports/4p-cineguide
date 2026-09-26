@@ -56,6 +56,9 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
 @media(max-width:720px){.grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:460px){.topbar{padding-left:14px;padding-right:14px}.grid.two,.grid.three{grid-template-columns:1fr}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}.hero-card{padding:9px}}
 
+.calibration{background:#101a14;border-color:#2d5540}.calibration strong{color:#e8fff0}.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.profile-item{background:#0d1115;border:1px solid #29333d;border-radius:12px;padding:10px}.profile-item small{display:block;color:#8f9ba7;text-transform:uppercase;font-size:.62rem;letter-spacing:.08em;font-weight:800}.profile-item strong{display:block;margin-top:4px;font-size:.92rem}.confirm-note{color:#ffd7a3;font-size:.8rem;line-height:1.45;margin-top:10px}.confidence-breakdown{margin-top:8px;color:#b9c6d2;font-size:.8rem;line-height:1.5}.confidence-breakdown strong{color:#eef3f7}.status-good{color:#b8f5cc}.status-warn{color:#ffd7a3}.compact-card{padding-top:14px;padding-bottom:14px}
+@media(max-width:460px){.profile-grid{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
 <body>
@@ -63,60 +66,70 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     <div>
       <div class="eyebrow">DJI Osmo Pocket 4P</div>
       <h1>4P CineGuide</h1>
-      <p class="subtitle">Upload a live-view screenshot or scene photo. Get a conservative cinematic Pro-mode prescription.</p>
+      <p class="subtitle">One Mimo screenshot. Exact HUD read + cinematic exposure, ND and WB guidance.</p>
     </div>
     <button id="installBtn" class="ghost hidden" type="button">Install</button>
   </header>
 
   <main>
+    <section class="card calibration">
+      <div class="eyebrow">Before the CineGuide screenshot</div>
+      <h2 style="margin:.35rem 0 .55rem">Set WB to 5600K</h2>
+      <p class="helper" style="margin:0;color:#cbe7d4">Use the fixed CineGuide calibration profile below, then take one normal DJI Mimo live-view screenshot. CineGuide will read M / shutter / ISO / EV automatically.</p>
+      <div class="profile-grid">
+        <div class="profile-item"><small>Resolution</small><strong>4K • 24 fps</strong></div>
+        <div class="profile-item"><small>Bitrate</small><strong>High</strong></div>
+        <div class="profile-item"><small>Color</small><strong>D-Log 2 • 10-bit</strong></div>
+        <div class="profile-item"><small>Calibration WB</small><strong>5600K manual</strong></div>
+        <div class="profile-item"><small>Exposure</small><strong>Manual (M)</strong></div>
+        <div class="profile-item"><small>Overlays</small><strong>Histogram / zebras / peaking OFF</strong></div>
+      </div>
+    </section>
+
     <section class="card hero-card">
       <div class="upload-zone" id="uploadZone">
-        <label for="imageInput" style="font-weight:800;margin-top:4px">Choose screenshot or photo from iPhone</label>
-        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/heic,image/heif,image/*" aria-label="Choose screenshot or photo from iPhone Photos or Files" />
+        <label for="imageInput" style="font-weight:800;margin-top:4px">Upload the Mimo screenshot</label>
+        <input id="imageInput" type="file" accept="image/png,image/jpeg,image/heic,image/heif,image/*" aria-label="Choose DJI Mimo screenshot from iPhone Photos or Files" />
         <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none" />
         <span class="upload-icon">＋</span>
-        <strong>Choose an image source</strong>
-        <small>For CineGuide, a DJI Mimo screenshot from Photos gives the strongest exposure anchor.</small>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px">
-          <button type="button" id="takePhotoBtn">Take New Photo</button>
-        </div>
+        <strong>Choose screenshot from Photos</strong>
+        <small>CineGuide rotates the Mimo screen upright and analyzes the camera live view—not the surrounding phone UI.</small>
       </div>
       <div id="previewWrap" class="preview-wrap hidden">
         <canvas id="previewCanvas"></canvas>
-        <div id="tapHint" class="tap-hint">Tap the important subject to weight exposure there.</div>
+        <div id="tapHint" class="tap-hint">Optional: tap the important subject to weight exposure there.</div>
         <button id="clearSubject" class="mini-btn hidden" type="button">Clear subject</button>
       </div>
     </section>
 
-    <section class="card">
+    <section class="card compact-card">
       <div class="section-title-row">
-        <h2>Input</h2>
-        <span id="sourceBadge" class="badge">No image</span>
+        <h2>Physical setup</h2>
+        <span class="badge soft">Confirm once</span>
       </div>
-      <div class="grid two">
-        <label>Source type
-          <select id="sourceType">
-            <option value="mimo">DJI Mimo screenshot</option>
-            <option value="pocket">Pocket 4P frame/photo</option>
-            <option value="phone">iPhone / Galaxy photo</option>
-          </select>
-        </label>
-        <label>Lens
+      <p class="helper">Mimo cannot reliably identify these physical accessories. CineGuide remembers your selections on this iPhone.</p>
+      <div class="grid three">
+        <label>Lens attachment in this screenshot
           <select id="lensMode">
-            <option value="wide">1× native wide — 20mm f/2.0</option>
-            <option value="wide108">DJI Wide-Angle — 108° FOV</option>
-            <option value="tele">3× med-tele — 60mm f/1.8</option>
+            <option value="">Unknown / confirm</option>
+            <option value="wide">1× native — no attachment</option>
+            <option value="wide108">DJI Wide-Angle — 108°</option>
           </select>
         </label>
-        <label>Delivery
-          <select id="deliveryMode">
-            <option value="landscape">4K 16:9</option>
-            <option value="vertical">3K 9:16</option>
+        <label>ND used in this screenshot
+          <select id="currentNd">
+            <option value="">Unknown / confirm</option>
+            <option value="0">None</option>
+            <option value="4">ND16 — 4 stops</option>
+            <option value="6">ND64 — 6 stops</option>
+            <option value="8">ND256 — 8 stops</option>
           </select>
         </label>
-        <label>Target FPS
-          <select id="targetFps">
-            <option selected>24</option><option>25</option><option>30</option><option>48</option><option>50</option><option>60</option>
+        <label>Black Mist in this screenshot
+          <select id="currentMist">
+            <option value="">Unknown / confirm</option>
+            <option value="off">No</option>
+            <option value="on">Yes</option>
           </select>
         </label>
         <label>Subject motion
@@ -127,25 +140,19 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
           </select>
         </label>
       </div>
-      <div class="row-actions">
-        <button id="ocrBtn" type="button" class="secondary">Read Mimo text (beta)</button>
-        <button id="exifBtn" type="button" class="secondary">Read photo metadata</button>
-      </div>
-      <p id="readerStatus" class="status-text">Core image analysis is local. OCR/metadata helpers may require internet on first use.</p>
+      <p id="physicalStatus" class="confirm-note">Confirm ND before relying on the ISO recommendation.</p>
     </section>
 
     <section class="card">
       <div class="section-title-row">
         <h2>Current camera state</h2>
-        <span class="badge soft">Exposure anchor</span>
+        <span class="badge soft">Auto-read from Mimo</span>
       </div>
-      <p class="helper">For a Mimo screenshot, CineGuide now reads the visible DJI HUD automatically. Physical accessories such as ND filters and the 108° lens still require confirmation because they are not reliably encoded in the screenshot.</p>
       <div id="mimoHudReadout" class="callout auto-read hidden"></div>
+      <div id="profileAlert" class="callout warning hidden"></div>
       <div class="grid three">
         <label>Current FPS
-          <select id="currentFps">
-            <option>24</option><option>25</option><option>30</option><option>48</option><option>50</option><option>60</option>
-          </select>
+          <input id="currentFps" type="text" value="24" readonly />
         </label>
         <label>Current shutter
           <select id="currentShutter">
@@ -153,7 +160,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
           </select>
         </label>
         <label>Current ISO
-          <input id="currentIso" type="number" min="50" max="51200" step="50" value="100" />
+          <input id="currentIso" type="number" min="50" max="51200" step="25" value="100" />
         </label>
         <label>Exposure mode
           <input id="currentExposureMode" type="text" value="—" readonly />
@@ -161,45 +168,20 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         <label>HUD EV meter
           <input id="currentEv" type="text" value="—" readonly />
         </label>
-        <label>Current WB
-          <input id="currentWb" type="number" min="2000" max="10000" step="100" value="5600" />
-        </label>
-        <label>Current physical ND
-          <select id="currentNd">
-            <option value="0">None</option>
-            <option value="4">ND16 — 4 stops</option>
-            <option value="6">ND64 — 6 stops</option>
-            <option value="8">ND256 — 8 stops</option>
-          </select>
-        </label>
-        <label>Preview profile
-          <select id="currentProfile">
-            <option value="dlog2">D-Log 2</option>
-            <option value="dlog">D-Log</option>
-            <option value="normal">Normal / Film Tone</option>
-          </select>
+        <label>Calibration WB
+          <input type="text" value="5600K (fixed before screenshot)" readonly />
         </label>
       </div>
-      <div class="grid two compact-top">
-        <label>Black Mist preference
-          <select id="mistPreference">
-            <option value="auto">Auto / creative</option>
-            <option value="on">Use Black Mist</option>
-            <option value="off">Do not use</option>
-          </select>
-        </label>
-        <label>Power frequency
-          <select id="powerFrequency">
-            <option value="60">60 Hz (US/Canada)</option>
-            <option value="50">50 Hz</option>
-          </select>
-        </label>
+      <div class="row-actions">
+        <button id="ocrBtn" type="button" class="secondary">Re-read Mimo HUD</button>
       </div>
+      <p id="readerStatus" class="status-text">Upload a screenshot to begin.</p>
     </section>
 
     <section class="card action-card">
-      <button id="analyzeBtn" class="primary" type="button">ANALYZE FOR POCKET 4P</button>
+      <button id="analyzeBtn" class="primary" type="button">RECALCULATE PRESCRIPTION</button>
       <button id="verifyBtn" class="secondary hidden" type="button">VERIFY CURRENT SETTINGS</button>
+      <button id="newSceneBtn" class="ghost hidden" type="button">Start New Scene</button>
     </section>
 
     <section id="results" class="card results hidden" aria-live="polite">
@@ -210,12 +192,10 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         </div>
         <div id="confidencePill" class="confidence">—</div>
       </div>
-
+      <div id="confidenceBreakdown" class="confidence-breakdown"></div>
       <div id="settingsGrid" class="settings-grid"></div>
-
       <div class="callout" id="actionCallout"></div>
       <div class="callout warning hidden" id="warningCallout"></div>
-
       <details>
         <summary>Advanced analysis</summary>
         <div id="analysisDetails" class="analysis-details"></div>
@@ -223,12 +203,24 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </section>
 
     <section class="card disclaimer">
-      <strong>What this version can and cannot know</strong>
-      <p>A screenshot is already tone-mapped by the camera/app, so this tool uses its pixels as a relative exposure check—not as an absolute lux meter. Exact recommendations are strongest when the current shutter, ISO, WB and ND state are known. Always verify the result with a second Mimo screenshot before an important take.</p>
+      <strong>How v1.7 interprets one screenshot</strong>
+      <p>4K/24, High bitrate, D-Log 2 10-bit and the 5600K manual-WB calibration are treated as your fixed shooting profile. Mimo HUD values provide the exposure anchor. Physical ND, Black Mist and the 108° attachment still require one-tap confirmation. The DJI EV meter is supporting evidence—not an absolute instruction.</p>
     </section>
+
+    <div class="hidden" aria-hidden="true">
+      <input id="sourceType" value="mimo" />
+      <input id="deliveryMode" value="landscape" />
+      <input id="targetFps" value="24" />
+      <input id="currentWb" value="5600" />
+      <input id="currentProfile" value="dlog2" />
+      <input id="mistPreference" value="auto" />
+      <input id="powerFrequency" value="60" />
+      <button id="exifBtn" type="button">metadata</button>
+      <button id="takePhotoBtn" type="button">photo</button>
+    </div>
   </main>
 
-  <footer>4P CineGuide v1.5 • improved DJI Mimo HUD auto-read • no image upload to a server by the core analyzer</footer>
+  <footer>4P CineGuide v1.7 • 5600K calibration workflow • fully local/offline Mimo OCR • no external runtime dependencies</footer>
 
   <script>
 (() => {
@@ -237,11 +229,11 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   const $ = id => document.getElementById(id);
   const els = {
     imageInput: $('imageInput'), cameraInput: $('cameraInput'), takePhotoBtn: $('takePhotoBtn'), previewWrap: $('previewWrap'), previewCanvas: $('previewCanvas'), tapHint: $('tapHint'), clearSubject: $('clearSubject'),
-    sourceType: $('sourceType'), lensMode: $('lensMode'), deliveryMode: $('deliveryMode'), targetFps: $('targetFps'), subjectMotion: $('subjectMotion'), sourceBadge: $('sourceBadge'),
-    ocrBtn: $('ocrBtn'), exifBtn: $('exifBtn'), readerStatus: $('readerStatus'),
-    currentFps: $('currentFps'), currentShutter: $('currentShutter'), currentIso: $('currentIso'), currentExposureMode: $('currentExposureMode'), currentEv: $('currentEv'), currentWb: $('currentWb'), currentNd: $('currentNd'), currentProfile: $('currentProfile'), mimoHudReadout: $('mimoHudReadout'),
+    sourceType: $('sourceType'), lensMode: $('lensMode'), deliveryMode: $('deliveryMode'), targetFps: $('targetFps'), subjectMotion: $('subjectMotion'), sourceBadge: null,
+    ocrBtn: $('ocrBtn'), exifBtn: $('exifBtn'), readerStatus: $('readerStatus'), physicalStatus: $('physicalStatus'), profileAlert: $('profileAlert'),
+    currentFps: $('currentFps'), currentShutter: $('currentShutter'), currentIso: $('currentIso'), currentExposureMode: $('currentExposureMode'), currentEv: $('currentEv'), currentWb: $('currentWb'), currentNd: $('currentNd'), currentProfile: $('currentProfile'), currentMist: $('currentMist'), mimoHudReadout: $('mimoHudReadout'),
     mistPreference: $('mistPreference'), powerFrequency: $('powerFrequency'),
-    analyzeBtn: $('analyzeBtn'), verifyBtn: $('verifyBtn'), results: $('results'), confidencePill: $('confidencePill'), settingsGrid: $('settingsGrid'), actionCallout: $('actionCallout'), warningCallout: $('warningCallout'), analysisDetails: $('analysisDetails'), installBtn: $('installBtn')
+    analyzeBtn: $('analyzeBtn'), verifyBtn: $('verifyBtn'), newSceneBtn: $('newSceneBtn'), results: $('results'), confidencePill: $('confidencePill'), confidenceBreakdown: $('confidenceBreakdown'), settingsGrid: $('settingsGrid'), actionCallout: $('actionCallout'), warningCallout: $('warningCallout'), analysisDetails: $('analysisDetails'), installBtn: $('installBtn')
   };
 
   let file = null;
@@ -252,6 +244,10 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   let cameraStateAutoRead = false;
   let autoOcrInProgress = false;
   let lastHudRead = null;
+  let pendingPrescription = null;
+  let verificationCandidate = false;
+  let lastExposureEvidence = null;
+  const FIXED_PROFILE = {fps:24, resolution:'4K 16:9', bitrate:'High', color:'D-Log 2 10-bit', wb:5600};
 
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const round100 = v => Math.round(v / 100) * 100;
@@ -284,68 +280,77 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     els.readerStatus.style.color = kind === 'bad' ? '#ffb5b5' : kind === 'good' ? '#b8f5cc' : '';
   }
 
+  function getMimoLiveViewCanvas(maxW=1600) {
+    const src=makeOrientedCanvas('ccw');
+    const W=src.width,H=src.height;
+    // Calibrated from the Pocket 4P / iPhone Mimo landscape view. The camera preview
+    // occupies the central 16:9 region; the far-left app rail is excluded.
+    const r={x:W*0.09,y:0,w:W*0.82,h:H};
+    const scale=Math.min(1,maxW/r.w);
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(r.w*scale)); c.height=Math.max(1,Math.round(r.h*scale));
+    c.getContext('2d',{willReadFrequently:true}).drawImage(src,r.x,r.y,r.w,r.h,0,0,c.width,c.height);
+    return c;
+  }
+
   function drawPreview() {
     if (!image) return;
-    const canvas = els.previewCanvas;
-    const maxW = 1400;
-    const scale = Math.min(1, maxW / image.naturalWidth);
-    canvas.width = Math.round(image.naturalWidth * scale);
-    canvas.height = Math.round(image.naturalHeight * scale);
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(image,0,0,canvas.width,canvas.height);
+    const src=getMimoLiveViewCanvas(1400);
+    const canvas=els.previewCanvas; canvas.width=src.width; canvas.height=src.height;
+    const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(src,0,0);
     if (subjectPoint) {
-      const x = subjectPoint.x * canvas.width, y = subjectPoint.y * canvas.height;
-      const r = Math.max(18, Math.min(canvas.width,canvas.height) * 0.045);
-      ctx.save();
-      ctx.strokeStyle = 'rgba(255,255,255,.96)'; ctx.lineWidth = Math.max(2,canvas.width/700);
-      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x-r*1.35,y); ctx.lineTo(x+r*1.35,y); ctx.moveTo(x,y-r*1.35); ctx.lineTo(x,y+r*1.35); ctx.stroke();
-      ctx.restore();
+      const x=subjectPoint.x*canvas.width,y=subjectPoint.y*canvas.height;
+      const r=Math.max(18,Math.min(canvas.width,canvas.height)*0.045);
+      ctx.save(); ctx.strokeStyle='rgba(255,255,255,.96)'; ctx.lineWidth=Math.max(2,canvas.width/700);
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-r*1.35,y);ctx.lineTo(x+r*1.35,y);ctx.moveTo(x,y-r*1.35);ctx.lineTo(x,y+r*1.35);ctx.stroke();ctx.restore();
       els.clearSubject.classList.remove('hidden');
-      els.tapHint.textContent = 'Subject selected. Tap elsewhere to move the exposure priority.';
+      els.tapHint.textContent='Subject selected. Tap elsewhere to move exposure priority.';
     } else {
       els.clearSubject.classList.add('hidden');
-      els.tapHint.textContent = 'Tap the important subject to weight exposure there.';
+      els.tapHint.textContent='Optional: tap the important subject to weight exposure there.';
     }
   }
 
-  function handleSelectedImage(f) {
-    if (!f) return;
-    file = f; subjectPoint = null; lastRecommendation = null; lastHudRead = null;
-    els.mimoHudReadout.classList.add('hidden'); els.mimoHudReadout.innerHTML='';
-    els.currentExposureMode.value='—'; els.currentEv.value='—';
-    const url = URL.createObjectURL(f);
-    const img = new Image();
-    img.onload = () => {
-      image = img; drawPreview(); URL.revokeObjectURL(url);
-      els.previewWrap.classList.remove('hidden');
-      els.sourceBadge.textContent = `${img.naturalWidth}×${img.naturalHeight}`;
-      els.results.classList.add('hidden'); els.verifyBtn.classList.add('hidden');
-      cameraStateAutoRead = false;
-      setStatus('Image loaded. Analyzing automatically…');
-      // Show an immediate first-pass prescription, then refine it from Mimo OCR when possible.
-      setTimeout(() => {
-        try { analyze(false); } catch (_) {}
-        if (els.sourceType.value === 'mimo') autoReadMimoAndRefresh();
-        else setStatus('Automatic first-pass analysis complete. Review the prescription below.', 'good');
-      }, 80);
-    };
-    img.onerror = () => setStatus('Could not read that image.', 'bad');
-    img.src = url;
+  function updatePhysicalStatus(){
+    const missing=[];
+    if(!els.lensMode.value) missing.push('lens');
+    if(els.currentNd.value==='') missing.push('ND');
+    if(!els.currentMist.value) missing.push('Black Mist');
+    els.physicalStatus.textContent=missing.length ? `Confirm ${missing.join(', ')}. ND must be confirmed before the ISO/ND prescription is high confidence.` : 'Physical setup confirmed.';
+    els.physicalStatus.style.color=missing.length?'#ffd7a3':'#b8f5cc';
   }
 
-  els.takePhotoBtn.addEventListener('click', () => els.cameraInput.click());
-  els.imageInput.addEventListener('change', e => handleSelectedImage(e.target.files?.[0]));
-  els.cameraInput.addEventListener('change', e => handleSelectedImage(e.target.files?.[0]));
+  function persistPhysical(){
+    try{ localStorage.setItem('cineguide.lens',els.lensMode.value); localStorage.setItem('cineguide.nd',els.currentNd.value); localStorage.setItem('cineguide.mist',els.currentMist.value); localStorage.setItem('cineguide.motion',els.subjectMotion.value); }catch(_){}
+    updatePhysicalStatus();
+  }
+  function restorePhysical(){
+    try{ const a=localStorage.getItem('cineguide.lens'); if(a!==null)els.lensMode.value=a; const n=localStorage.getItem('cineguide.nd'); if(n!==null)els.currentNd.value=n; const m=localStorage.getItem('cineguide.mist'); if(m!==null)els.currentMist.value=m; const sm=localStorage.getItem('cineguide.motion'); if(sm)els.subjectMotion.value=sm; }catch(_){}
+    updatePhysicalStatus();
+  }
+  [els.lensMode,els.currentNd,els.currentMist,els.subjectMotion].forEach(el=>el.addEventListener('change',()=>{persistPhysical(); if(image) analyze(false,{preservePending:true});}));
 
-  els.previewCanvas.addEventListener('click', e => {
-    if (!image) return;
-    const rect = els.previewCanvas.getBoundingClientRect();
-    subjectPoint = { x: clamp((e.clientX - rect.left) / rect.width,0,1), y: clamp((e.clientY - rect.top) / rect.height,0,1) };
-    drawPreview();
-  });
-  els.clearSubject.addEventListener('click', () => { subjectPoint = null; drawPreview(); });
+  function handleSelectedImage(f) {
+    if (!f) return;
+    verificationCandidate=!!pendingPrescription;
+    file=f; subjectPoint=null; lastRecommendation=null; lastHudRead=null; cameraStateAutoRead=false;
+    els.mimoHudReadout.classList.add('hidden'); els.mimoHudReadout.innerHTML='';
+    els.profileAlert.classList.add('hidden'); els.profileAlert.innerHTML='';
+    els.currentExposureMode.value='—'; els.currentEv.value='—';
+    const url=URL.createObjectURL(f), img=new Image();
+    img.onload=()=>{
+      image=img; drawPreview(); URL.revokeObjectURL(url); els.previewWrap.classList.remove('hidden');
+      els.results.classList.toggle('hidden',!pendingPrescription);
+      setStatus(verificationCandidate?'Verification screenshot loaded. Reading Mimo HUD…':'Screenshot loaded. Reading Mimo HUD…');
+      setTimeout(()=>autoReadMimoAndRefresh(),60);
+    };
+    img.onerror=()=>setStatus('Could not read that image.','bad'); img.src=url;
+  }
+
+  els.imageInput.addEventListener('change',e=>handleSelectedImage(e.target.files?.[0]));
+  els.previewCanvas.addEventListener('click',e=>{ if(!image)return; const rect=els.previewCanvas.getBoundingClientRect(); subjectPoint={x:clamp((e.clientX-rect.left)/rect.width,0,1),y:clamp((e.clientY-rect.top)/rect.height,0,1)}; drawPreview(); if(!verificationCandidate) analyze(false,{preservePending:true}); });
+  els.clearSubject.addEventListener('click',()=>{subjectPoint=null;drawPreview();if(image&&!verificationCandidate)analyze(false,{preservePending:true});});
 
   function percentileFromHist(hist, q, total) {
     const target = total * q; let sum = 0;
@@ -374,71 +379,61 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   }
 
   function analyzeImagePixels() {
-    if (!image) throw new Error('Add a screenshot or photo first.');
-    const maxDim=900;
-    const scale=Math.min(1,maxDim/Math.max(image.naturalWidth,image.naturalHeight));
-    const w=Math.max(1,Math.round(image.naturalWidth*scale)), h=Math.max(1,Math.round(image.naturalHeight*scale));
-    const c=document.createElement('canvas'); c.width=w; c.height=h;
-    const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(image,0,0,w,h);
-    const data=ctx.getImageData(0,0,w,h).data;
-
-    const source=els.sourceType.value;
-    // Mimo UI occupies edges on many phone layouts. Center-safe analysis reduces icon/bar contamination.
-    const mx=source==='mimo'?0.06:0.015, myTop=source==='mimo'?0.07:0.015, myBottom=source==='mimo'?0.10:0.015;
-    const x0=Math.floor(w*mx), x1=Math.ceil(w*(1-mx)), y0=Math.floor(h*myTop), y1=Math.ceil(h*(1-myBottom));
-    const hist=new Uint32Array(256); let total=0, high=0, low=0;
-    let nr=0,ng=0,nb=0,nc=0, mr=0,mg=0,mb=0,mc=0;
-    const step=Math.max(1,Math.floor(Math.max(w,h)/700));
-    for(let y=y0;y<y1;y+=step){
-      for(let x=x0;x<x1;x+=step){
-        const i=(y*w+x)*4; const r=data[i],g=data[i+1],b=data[i+2];
-        const lum=clamp(Math.round(0.2126*r+0.7152*g+0.0722*b),0,255);
-        hist[lum]++; total++; if(lum>=250)high++; if(lum<=5)low++;
-        if(lum>35&&lum<230){ mr+=r;mg+=g;mb+=b;mc++; const max=Math.max(r,g,b),min=Math.min(r,g,b); if(max-min<24){nr+=r;ng+=g;nb+=b;nc++;} }
-      }
-    }
-    const p01=percentileFromHist(hist,.01,total), p05=percentileFromHist(hist,.05,total), p50=percentileFromHist(hist,.50,total), p95=percentileFromHist(hist,.95,total), p99=percentileFromHist(hist,.99,total);
-    const highClip=high/total, shadowClip=low/total;
-    const avgNeutral=nc>80?{r:nr/nc,g:ng/nc,b:nb/nc,count:nc}:{r:mr/Math.max(1,mc),g:mg/Math.max(1,mc),b:mb/Math.max(1,mc),count:nc};
+    if(!image) throw new Error('Add a Mimo screenshot first.');
+    const c=getMimoLiveViewCanvas(1000),w=c.width,h=c.height,ctx=c.getContext('2d',{willReadFrequently:true}),data=ctx.getImageData(0,0,w,h).data;
+    const hist=new Uint32Array(256); let total=0,high=0,low=0,nr=0,ng=0,nb=0,nc=0,mr=0,mg=0,mb=0,mc=0;
+    const step=Math.max(1,Math.floor(Math.max(w,h)/720));
+    const masked=(nx,ny)=>{
+      // Ignore persistent Mimo overlays while retaining as much live-view scene as possible.
+      if(nx>.82) return true;                    // right controls / record button
+      if(nx<.18 && ny>.78) return true;         // histogram area
+      if(nx>.36 && nx<.66 && ny>.87) return true; // shutter/ISO/EV strip
+      if(nx>.64 && ny<.13) return true;         // connection / battery status
+      return false;
+    };
+    for(let y=0;y<h;y+=step){for(let x=0;x<w;x+=step){
+      const nx=x/w,ny=y/h;if(masked(nx,ny))continue;
+      const i=(y*w+x)*4,r=data[i],g=data[i+1],b=data[i+2],lum=clamp(Math.round(.2126*r+.7152*g+.0722*b),0,255);
+      hist[lum]++;total++;if(lum>=250)high++;if(lum<=5)low++;
+      if(lum>35&&lum<230){mr+=r;mg+=g;mb+=b;mc++;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);if(mx-mn<24){nr+=r;ng+=g;nb+=b;nc++;}}
+    }}
+    const p01=percentileFromHist(hist,.01,total),p05=percentileFromHist(hist,.05,total),p50=percentileFromHist(hist,.50,total),p95=percentileFromHist(hist,.95,total),p99=percentileFromHist(hist,.99,total);
+    const highClip=high/Math.max(1,total),shadowClip=low/Math.max(1,total);
+    const avgNeutral=nc>80?{r:nr/nc,g:ng/nc,b:nb/nc}:{r:mr/Math.max(1,mc),g:mg/Math.max(1,mc),b:mb/Math.max(1,mc)};
     const cct=estimateCCT(avgNeutral.r,avgNeutral.g,avgNeutral.b);
-
     let subjectMedian=null;
     if(subjectPoint){
-      const sx=subjectPoint.x*w, sy=subjectPoint.y*h, rad=Math.max(16,Math.min(w,h)*.10); const sh=new Uint32Array(256); let st=0;
-      const ax0=Math.max(0,Math.floor(sx-rad)),ax1=Math.min(w,Math.ceil(sx+rad)),ay0=Math.max(0,Math.floor(sy-rad)),ay1=Math.min(h,Math.ceil(sy+rad));
-      for(let y=ay0;y<ay1;y+=step){ for(let x=ax0;x<ax1;x+=step){ const dx=x-sx,dy=y-sy;if(dx*dx+dy*dy>rad*rad)continue; const i=(y*w+x)*4; const lum=clamp(Math.round(.2126*data[i]+.7152*data[i+1]+.0722*data[i+2]),0,255); sh[lum]++;st++; }}
-      if(st>10) subjectMedian=percentileFromHist(sh,.50,st);
+      const sx=subjectPoint.x*w,sy=subjectPoint.y*h,rad=Math.max(18,Math.min(w,h)*.10),sh=new Uint32Array(256);let st=0;
+      for(let y=Math.max(0,Math.floor(sy-rad));y<Math.min(h,Math.ceil(sy+rad));y+=step){for(let x=Math.max(0,Math.floor(sx-rad));x<Math.min(w,Math.ceil(sx+rad));x+=step){const dx=x-sx,dy=y-sy;if(dx*dx+dy*dy>rad*rad)continue;const i=(y*w+x)*4,lum=clamp(Math.round(.2126*data[i]+.7152*data[i+1]+.0722*data[i+2]),0,255);sh[lum]++;st++;}}
+      if(st>10)subjectMedian=percentileFromHist(sh,.50,st);
     }
-
-    const spread=p95-p05;
-    const highDR = p95>.86 && p05<.13;
-    const colorBias = {
-      warm: log2((avgNeutral.r+1)/(avgNeutral.b+1)),
-      green: log2((avgNeutral.g+1)/(((avgNeutral.r+avgNeutral.b)/2)+1))
-    };
-    return {w,h,p01,p05,p50,p95,p99,highClip,shadowClip,spread,highDR,cct,neutralCount:nc,colorBias,subjectMedian};
+    const spread=p95-p05,highDR=p95>.86&&p05<.13;
+    const colorBias={warm:log2((avgNeutral.r+1)/(avgNeutral.b+1)),green:log2((avgNeutral.g+1)/(((avgNeutral.r+avgNeutral.b)/2)+1))};
+    return {w,h,p01,p05,p50,p95,p99,highClip,shadowClip,spread,highDR,cct,neutralCount:nc,colorBias,subjectMedian,analysisRegion:'Mimo live view only'};
   }
 
   function exposureCorrection(m) {
-    let d=0;
-    if (m.highClip > .020 || (m.p99>.995 && m.p95>.93)) d=-0.7;
-    else if (m.highClip > .006 || (m.p99>.985 && m.p95>.90)) d=-0.3;
-    else if (m.p50 < .16 && m.p95 < .62) d=1.0;
-    else if (m.p50 < .23 && m.p95 < .72) d=.7;
-    else if (m.p50 < .30 && m.p95 < .80) d=.3;
-    else if (m.p50 > .67 && m.p95 > .95) d=-.3;
-
-    if (m.subjectMedian != null) {
-      const profile=els.currentProfile.value;
-      const target=profile==='dlog2'?.42:profile==='dlog'?.44:.50;
-      let sd=clamp(log2(target/Math.max(.035,m.subjectMedian)),-1.0,1.0);
-      if (sd>0 && m.highClip>.008) sd=0;
-      d = clamp(d*.45 + sd*.55,-1.0,1.0);
+    let imageDelta=0;
+    if(m.highClip>.020||(m.p99>.995&&m.p95>.93))imageDelta=-0.7;
+    else if(m.highClip>.006||(m.p99>.985&&m.p95>.90))imageDelta=-0.3;
+    else if(m.p50<.16&&m.p95<.62)imageDelta=1.0;
+    else if(m.p50<.23&&m.p95<.72)imageDelta=.7;
+    else if(m.p50<.30&&m.p95<.80)imageDelta=.3;
+    else if(m.p50>.67&&m.p95>.95)imageDelta=-.3;
+    if(m.subjectMedian!=null){let sd=clamp(log2(.42/Math.max(.035,m.subjectMedian)),-1,1);if(sd>0&&m.highClip>.008)sd=0;imageDelta=clamp(imageDelta*.45+sd*.55,-1,1);}
+    imageDelta*=.82; // D-Log 2 rendered preview is not an absolute light meter.
+    imageDelta=Math.round(imageDelta*10)/10;
+    const ev=parseFloat(String(els.currentEv.value).replace('—',''));
+    let meterDelta=null,agreement='unavailable',delta=imageDelta;
+    if(Number.isFinite(ev)){
+      meterDelta=clamp(-ev,-1.2,1.2);
+      const same=Math.abs(imageDelta)<.15||Math.abs(meterDelta)<.15||Math.sign(imageDelta)===Math.sign(meterDelta);
+      agreement=same?'supports':'disagrees';
+      delta=same?imageDelta*.80+meterDelta*.20:imageDelta*.90+meterDelta*.10;
     }
-    // Rendered Log previews and phone tone mapping are not calibrated light meters; keep changes conservative.
-    if (els.currentProfile.value==='dlog2') d*=.82;
-    if (els.sourceType.value==='phone') d*=.65;
-    return Math.round(d*10)/10;
+    delta=Math.round(clamp(delta,-1.2,1.2)*10)/10;
+    lastExposureEvidence={delta,imageDelta,meterDelta,agreement,ev:Number.isFinite(ev)?ev:null};
+    return lastExposureEvidence;
   }
 
   function sceneLabel(m) {
@@ -459,177 +454,122 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   }
 
   function chooseExposure(delta) {
-    const curIso=clamp(Number(els.currentIso.value)||100,50,51200);
-    const curShutter=clamp(Number(els.currentShutter.value)||50,4,16000);
-    const curNd=Number(els.currentNd.value)||0;
-    const fps=Number(els.targetFps.value)||24;
-    const targetShutter=targetShutterForFps(fps);
-    const tele=els.lensMode.value==='tele';
-    const isoList=tele?ISO_STEPS_TELE:ISO_STEPS_WIDE;
-    const scene=sceneLabel(lastMetricsForExposure || {p50:.5,p95:.9,cct:5200,highDR:false});
-    const lowLight=/Night|Dim/.test(scene);
+    const curIso=clamp(Number(els.currentIso.value)||100,50,51200),curShutter=clamp(Number(els.currentShutter.value)||50,4,16000);
+    const ndKnown=els.currentNd.value!==''; const curNd=ndKnown?Number(els.currentNd.value):0;
+    const targetShutter=50,isoList=ISO_STEPS_WIDE,scene=sceneLabel(lastMetricsForExposure||{p50:.5,p95:.9,cct:5200,highDR:false}),lowLight=/Night|Dim/.test(scene);
     let best=null;
-    for(const nd of ND_OPTIONS){
-      for(const iso of isoList){
-        const achieved = log2(iso/curIso) + log2(curShutter/targetShutter) - (nd.stops-curNd);
-        const err=Math.abs(achieved-delta);
-        const isoBase=tele?50:100;
-        const isoStops=Math.max(0,log2(iso/isoBase));
-        let noisePenalty=isoStops*.035;
-        if(iso>800) noisePenalty += log2(iso/800)*.20;
-        if(iso>3200) noisePenalty += log2(iso/3200)*.48;
-        if(!lowLight && iso>1600) noisePenalty += .35;
-        // Within about one-third stop, prefer lower ISO over a numerically exact but noisier match.
-        const effectiveErr=Math.max(0,err-.34);
-        const filterPenalty=nd.stops*.004;
-        const score=effectiveErr*4+noisePenalty+filterPenalty;
-        if(!best||score<best.score) best={iso,nd,achieved,err,score,targetShutter};
-      }
-    }
+    for(const nd of ND_OPTIONS){for(const iso of isoList){
+      const achieved=log2(iso/curIso)+log2(curShutter/targetShutter)-(nd.stops-curNd),err=Math.abs(achieved-delta);
+      const isoStops=Math.max(0,log2(iso/100));let noisePenalty=isoStops*.035;if(iso>800)noisePenalty+=log2(iso/800)*.20;if(iso>3200)noisePenalty+=log2(iso/3200)*.48;if(!lowLight&&iso>1600)noisePenalty+=.35;
+      const effectiveErr=Math.max(0,err-.25),filterPenalty=nd.stops*.004,changePenalty=ndKnown&&nd.stops!==curNd?.015:0,score=effectiveErr*4+noisePenalty+filterPenalty+changePenalty;
+      if(!best||score<best.score)best={iso,nd,achieved,err,score,targetShutter};
+    }}
+    best.ndKnown=ndKnown;best.curNd=curNd;best.neutralIso=curIso*(targetShutter/curShutter)*Math.pow(2,best.nd.stops-curNd);
     return best;
   }
 
   let lastMetricsForExposure=null;
 
   function recommendWB(m) {
-    const current=clamp(Number(els.currentWb.value)||5600,2000,10000);
-    const source=els.sourceType.value;
-    let wb=current, reason='kept from current anchor';
-    if((source==='mimo'||source==='pocket') && isFinite(m.colorBias.warm)){
-      const shift=clamp(-m.colorBias.warm*1900,-1300,1300);
-      if(Math.abs(shift)>=100){ wb=round100(clamp(current+shift,2500,8000)); reason='adjusted from neutral-pixel color bias'; }
-    } else if(source==='phone') {
-      const s=sceneLabel(m);
-      if(/Warm interior/.test(s)||/warm practicals/.test(s)) wb=3200;
-      else if(/Cool|overcast/.test(s)) wb=6200;
-      else if(/Night/.test(s)) wb=3800;
-      else if(/Dim interior/.test(s)) wb=4300;
-      else wb=5600;
-      reason='coarse scene estimate; phone auto-WB lowers confidence';
+    const current=5600; let wb=current,reason='5600K calibration anchor retained';
+    if(isFinite(m.colorBias.warm)){
+      const shift=clamp(-m.colorBias.warm*1900,-1500,1500);
+      if(Math.abs(shift)>=100){wb=round100(clamp(current+shift,2800,7500));reason='estimated from scene color relative to the known 5600K calibration anchor';}
     }
-    return {wb,reason};
+    const score=clamp(50+(m.neutralCount>500?28:m.neutralCount>180?18:m.neutralCount>60?8:0)-(m.highClip>.02?8:0),40,82);
+    const label=score>=75?'HIGH':score>=62?'MEDIUM-HIGH':'MEDIUM';
+    return {wb,reason,score,label};
   }
 
-  function profileRecommendation() {
-    const lens=els.lensMode.value;
-    if(lens==='tele') return {label:'D-Log 10-bit', note:'D-Log 2 is restricted to 1×; use standard D-Log on 3×.'};
-    return {label:'D-Log 2 10-bit', note:'Use 1× camera; the 108° attachment remains on the 1× optical camera.'};
+  function profileRecommendation(){return {label:'D-Log 2 10-bit',note:'Fixed CineGuide profile on the 1× optical camera.'};}
+  function focusRecommendation(){const motion=els.subjectMotion.value;if(motion==='static')return{label:'AFS',note:'Single AF; lock after tapping the subject.'};if(motion==='person')return{label:'AFC + Subject Lock',note:'Continuous AF with face/subject lock when useful.'};return{label:'AFC — Default',note:'Continuous AF for moving or uncertain subjects.'};}
+  function mistRecommendation(m){if(m.highClip>.006||m.highDR||m.p50<.18)return{label:'OFF / optional',note:'Bright practicals/high contrast can bloom heavily.'};return{label:'Optional',note:'Use for softer highlights/halation; not required for exposure.'};}
+
+  function confidenceFor(m,wbRec) {
+    let exposure=42; if(lastHudRead?.shutter)exposure+=14;if(lastHudRead?.iso)exposure+=14;if(lastHudRead?.ev!==null&&lastHudRead?.ev!==undefined)exposure+=8;if(lastHudRead?.exposureMode==='M')exposure+=5;if(els.currentNd.value!=='')exposure+=12;if(subjectPoint)exposure+=5;if(m.highClip>.03)exposure-=5;exposure=clamp(exposure,35,96);
+    let physical=35;if(els.currentNd.value!=='')physical+=30;if(els.lensMode.value)physical+=18;if(els.currentMist.value)physical+=17;physical=clamp(physical,35,100);
+    let overall=Math.round(exposure*.58+wbRec.score*.24+physical*.18);
+    if(els.currentNd.value==='')overall=Math.min(overall,79);if(!els.lensMode.value||!els.currentMist.value)overall=Math.min(overall,84);
+    const label=overall>=85?'HIGH':overall>=68?'MEDIUM-HIGH':overall>=52?'MEDIUM':'LOW';
+    const expLabel=exposure>=85?'High':exposure>=68?'Medium-High':'Medium'; const physLabel=physical>=90?'Confirmed':physical>=65?'Partial':'Needs confirmation';
+    return {score:overall,label,exposure,expLabel,wb:wbRec.score,wbLabel:wbRec.label,physical,physLabel};
   }
 
-  function focusRecommendation() {
-    const motion=els.subjectMotion.value;
-    if(motion==='static') return {label:'AFS',note:'Single AF; lock focus after tapping subject.'};
-    if(motion==='person') return {label:'AFC + Subject Lock',note:'Continuous AF with subject/face lock when useful.'};
-    return {label:'AFC — Default',note:'Continuous AF for moving or uncertain subjects.'};
+  function makeActionText(rec,current,exp){
+    const acts=[];if(rec.nd.stops!==current.nd||!current.ndKnown)acts.push(rec.nd.stops===0?'ND: use None':`ND: install ${rec.nd.label}`);
+    if(rec.iso!==current.iso)acts.push(`ISO ${current.iso} → ${rec.iso}`);else acts.push(`keep ISO ${rec.iso}`);
+    if(rec.shutter!==current.shutter)acts.push(`shutter 1/${current.shutter} → 1/${rec.shutter}`);else acts.push(`keep shutter 1/${rec.shutter}`);
+    acts.push(`WB 5600K → ${rec.wb}K`);return acts.join(' • ')+'.';
+  }
+  function settingTile(label,value,sub=''){return `<div class="setting-tile"><small>${label}</small><strong>${value}</strong>${sub?`<span class="sub">${sub}</span>`:''}</div>`;}
+  function metricRow(label,value){return `<div class="metric-row"><span>${label}</span><span>${value}</span></div>`;} const pct=v=>`${(v*100).toFixed(1)}%`;
+
+  function renderPrescription(rec,current,exp,m,wbRec,conf,verify=false){
+    const lensLabel=els.lensMode.value==='wide108'?'DJI Wide-Angle — 108°':els.lensMode.value==='wide'?'1× native — 20mm f/2.0':'1× lens — confirm attachment';
+    const profile=profileRecommendation(),focus=focusRecommendation(),mist=mistRecommendation(m);
+    els.settingsGrid.innerHTML=[
+      settingTile('Resolution','4K 16:9','24 fps fixed profile'),settingTile('Bitrate','HIGH','Fixed profile'),settingTile('Lens',lensLabel,els.lensMode.value?'Physical setup confirmed':'Confirm physical attachment'),
+      settingTile('Color',profile.label,profile.note),settingTile('Shutter','1/50','180°-style 24p target'),settingTile('ISO',String(exp.iso),exp.iso>3200?'High ISO — add light if practical':exp.iso>800?'Low-light compromise':'Quality-first'),
+      settingTile('White balance',`${wbRec.wb}K`,`${wbRec.label} confidence • ${wbRec.reason}`),settingTile('ND filter',exp.nd.label,`${exp.nd.stops} stops${exp.ndKnown?'':' • provisional until current ND confirmed'}`),settingTile('Focus',focus.label,focus.note),settingTile('Black Mist',mist.label,mist.note)
+    ].join('');
+    els.confidencePill.textContent=`${conf.label} • ${conf.score}%`;
+    els.confidenceBreakdown.innerHTML=`<strong>Exposure:</strong> ${conf.expLabel} (${conf.exposure}%) &nbsp;•&nbsp; <strong>WB:</strong> ${conf.wbLabel} (${conf.wb}%) &nbsp;•&nbsp; <strong>Physical:</strong> ${conf.physLabel}`;
+    const neutral=Math.max(50,Math.round(exp.neutralIso/10)*10),change=exp.achieved;
+    const evidence=lastExposureEvidence;
+    const why=evidence?.ev!=null?`Live-view analysis calls for ${evidence.imageDelta>0?'+':''}${evidence.imageDelta.toFixed(1)} stop; DJI EV ${evidence.ev.toFixed(1)} ${evidence.agreement==='supports'?'supports the same direction':'does not fully agree, so its influence is limited'}.`:`Live-view analysis calls for ${evidence?.imageDelta>0?'+':''}${(evidence?.imageDelta||0).toFixed(1)} stop.`;
+    els.actionCallout.innerHTML=`<strong>${verify?'Verification result':'Set this, then take one verification screenshot.'}</strong><br>${makeActionText(rec,current,exp)}<br><span style="color:#b8d7c3">Exposure math:</span> at 1/50 with ${exp.nd.label}, exposure-preserving ISO is about ${neutral}. The recommendation changes exposure by ${change>=0?'+':''}${change.toFixed(2)} stop vs the uploaded camera state. ${why}`;
+    const warnings=[];
+    if(els.currentNd.value==='')warnings.push('Current ND is unknown. ISO/ND is provisional until you confirm None / ND16 / ND64 / ND256.');
+    if(!els.lensMode.value)warnings.push('Confirm whether the DJI 108° Wide-Angle attachment is installed.');
+    if(!els.currentMist.value)warnings.push('Confirm whether Black Mist is physically installed.');
+    if(lastHudRead?.fps&&lastHudRead.fps!==24)warnings.push(`Mimo appears to show ${lastHudRead.fps} fps. Your CineGuide profile requires 24 fps.`);
+    if(lastHudRead?.exposureMode&&lastHudRead.exposureMode!=='M')warnings.push('Exposure mode is not Manual. Set M before using the prescription.');
+    if(m.highClip>.02)warnings.push(`Highlight clipping is substantial (${pct(m.highClip)}). Protect important highlights.`);
+    if(exp.iso>3200)warnings.push('Calculated ISO is above the preferred range. Add light when practical.');
+    warnings.push('Under some 60 Hz LED/fluorescent fixtures, 1/50 can flicker. If bands/pulsing appear, test 1/60 and re-verify.');
+    els.warningCallout.classList.toggle('hidden',warnings.length===0);els.warningCallout.innerHTML=warnings.length?`<strong>Watch-outs</strong><br>${warnings.join('<br>')}`:'';
+    const cctText=m.cct?`${Math.round(m.cct)} K rendered-neutral estimate`:'Not enough neutral pixels';
+    els.analysisDetails.innerHTML=[metricRow('Analyzed region',m.analysisRegion),metricRow('Scene classification',rec.scene),metricRow('Live-view exposure correction',`${evidence.delta>0?'+':''}${evidence.delta.toFixed(1)} stop`),metricRow('Image-only correction',`${evidence.imageDelta>0?'+':''}${evidence.imageDelta.toFixed(1)} stop`),metricRow('DJI EV support',evidence.ev==null?'Unavailable':`${evidence.ev.toFixed(1)} EV • ${evidence.agreement}`),metricRow('Median luminance',pct(m.p50)),metricRow('95th percentile',pct(m.p95)),metricRow('99th percentile',pct(m.p99)),metricRow('Highlight clipping',pct(m.highClip)),metricRow('Shadow clipping',pct(m.shadowClip)),metricRow('Tone spread',pct(m.spread)),metricRow('Subject median',m.subjectMedian==null?'Not selected':pct(m.subjectMedian)),metricRow('Neutral color estimate',cctText),metricRow('Neutral-pixel sample',String(m.neutralCount)),metricRow('Exposure match error',`${exp.err.toFixed(2)} stop`)].join('');
+    els.results.classList.remove('hidden');els.verifyBtn.classList.remove('hidden');els.newSceneBtn.classList.remove('hidden');
   }
 
-  function mistRecommendation(m) {
-    const pref=els.mistPreference.value;
-    if(pref==='on') return {label:'ON',note:'Creative diffusion; exposure math does not rely on it.'};
-    if(pref==='off') return {label:'OFF',note:'Maximum contrast/clean highlights.'};
-    if(m.highClip>.006 || m.highDR || m.p50<.18) return {label:'OFF / optional',note:'High-contrast or bright practicals can bloom heavily.'};
-    return {label:'Optional',note:'Use for softer highlight rolloff/halation; not required for exposure.'};
+  function analyze(verify=false,opts={}) {
+    try{
+      if(!image)throw new Error('Upload a Mimo screenshot first.');
+      const m=analyzeImagePixels();lastMetricsForExposure=m;const evd=exposureCorrection(m),exp=chooseExposure(evd.delta),wbRec=recommendWB(m),conf=confidenceFor(m,wbRec);
+      const ndKnown=els.currentNd.value!=='';const current={fps:24,iso:Number(els.currentIso.value)||100,shutter:Number(els.currentShutter.value)||50,wb:5600,nd:ndKnown?Number(els.currentNd.value):0,ndKnown};
+      const rec={fps:24,iso:exp.iso,nd:exp.nd,shutter:50,wb:wbRec.wb,delta:evd.delta,metrics:m,conf,scene:sceneLabel(m)};lastRecommendation=rec;
+      if(!opts.preservePending&&!verificationCandidate)pendingPrescription=JSON.parse(JSON.stringify({fps:rec.fps,iso:rec.iso,nd:rec.nd,shutter:rec.shutter,wb:rec.wb,scene:rec.scene}));
+      renderPrescription(rec,current,exp,m,wbRec,conf,verify);
+      if(!verify)els.results.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){alert(err.message||String(err));}
   }
 
-  function confidenceFor(m) {
-    const source=els.sourceType.value;
-    let score=source==='mimo'?78:source==='pocket'?72:55;
-    const iso=Number(els.currentIso.value), sh=Number(els.currentShutter.value), wb=Number(els.currentWb.value);
-    if(iso&&sh) score+=8; if(wb)score+=3; if(subjectPoint)score+=5; if(m.neutralCount>150)score+=3;
-    if(source==='mimo' && !cameraStateAutoRead) score-=12;
-    if(source==='phone') score-=5; if(m.highClip>.03)score-=3;
-    score=clamp(Math.round(score),35,96);
-    const label=score>=85?'HIGH':score>=65?'MEDIUM-HIGH':score>=50?'MEDIUM':'LOW';
-    return {score,label};
-  }
-
-  function makeActionText(rec, current) {
-    const acts=[];
-    if(rec.fps!==current.fps) acts.push(`FPS ${current.fps} → ${rec.fps}`);
-    if(rec.nd.stops!==current.nd) acts.push(rec.nd.stops===0?'Remove the ND filter':`Install ${rec.nd.label}`);
-    if(rec.iso!==current.iso) acts.push(`ISO ${current.iso} → ${rec.iso}`); else acts.push(`keep ISO ${rec.iso}`);
-    if(rec.shutter!==current.shutter) acts.push(`shutter 1/${current.shutter} → 1/${rec.shutter}`); else acts.push(`keep shutter 1/${rec.shutter}`);
-    if(rec.wb!==current.wb) acts.push(`WB ${current.wb}K → ${rec.wb}K`); else acts.push(`keep WB ${rec.wb}K`);
-    return acts.join(' • ') + '.';
-  }
-
-  function settingTile(label,value,sub='') {
-    return `<div class="setting-tile"><small>${label}</small><strong>${value}</strong>${sub?`<span class="sub">${sub}</span>`:''}</div>`;
-  }
-
-  function metricRow(label,value) { return `<div class="metric-row"><span>${label}</span><span>${value}</span></div>`; }
-  const pct=v=>`${(v*100).toFixed(1)}%`;
-
-  function analyze(verify=false) {
-    try {
-      if(!image) throw new Error('Take or upload a screenshot/photo first.');
-      const m=analyzeImagePixels(); lastMetricsForExposure=m;
-      const delta=exposureCorrection(m);
-      const exp=chooseExposure(delta);
-      const wbRec=recommendWB(m), profile=profileRecommendation(), focus=focusRecommendation(), mist=mistRecommendation(m), conf=confidenceFor(m);
-      const fps=Number(els.targetFps.value)||24;
-      const delivery=els.deliveryMode.value==='vertical'?'3K 9:16':'4K 16:9';
-      const lensLabel=els.lensMode.value==='wide108'?'DJI Wide-Angle — 108°':els.lensMode.value==='tele'?'3× 60mm f/1.8':'1× 20mm f/2.0';
-      const current={fps:Number(els.currentFps.value)||24, iso:Number(els.currentIso.value)||100, shutter:Number(els.currentShutter.value)||50, wb:Number(els.currentWb.value)||5600, nd:Number(els.currentNd.value)||0};
-      const rec={fps,iso:exp.iso,nd:exp.nd,shutter:exp.targetShutter,wb:wbRec.wb,delta,metrics:m,conf,scene:sceneLabel(m)};
-      lastRecommendation=rec;
-
-      els.settingsGrid.innerHTML = [
-        settingTile('Resolution',delivery,`${fps} fps`),
-        settingTile('Lens',lensLabel,els.lensMode.value==='wide108'?'108° attachment on 1× camera':''),
-        settingTile('Color',profile.label,profile.note),
-        settingTile('Shutter',`1/${exp.targetShutter}`,`${fps===24?'180°-style target (camera-friendly 1/50)':'180°-style target'}`),
-        settingTile('ISO',String(exp.iso),exp.iso>3200?'High ISO — add light if possible':exp.iso>800?'Low-light compromise':'Quality-first'),
-        settingTile('White balance',`${wbRec.wb}K`,wbRec.reason),
-        settingTile('ND filter',exp.nd.label,`${exp.nd.stops} stop${exp.nd.stops===1?'':'s'}`),
-        settingTile('Focus',focus.label,focus.note),
-        settingTile('Black Mist',mist.label,mist.note)
-      ].join('');
-
-      els.confidencePill.textContent=`${conf.label} • ${conf.score}%`;
-      els.actionCallout.innerHTML = verify && Math.abs(delta)<=.3 && m.highClip<.01
-        ? `<strong>Settings verified. Shoot.</strong><br>The second-pass image is within the conservative exposure window. ${makeActionText(rec,current)}`
-        : `<strong>${verify?'Correction still recommended':'Set this, then verify with one more Mimo screenshot.'}</strong><br>${makeActionText(rec,current)}`;
-
-      const warnings=[];
-      if(els.sourceType.value==='mimo' && !cameraStateAutoRead) warnings.push('FIRST PASS: CineGuide has analyzed the scene, but has not yet confirmed the visible Mimo shutter/ISO. The recommendation will refresh automatically if HUD reading succeeds. Physical ND must always be confirmed manually.');
-      if(els.sourceType.value==='phone') warnings.push('Phone photo mode uses computational exposure/WB, so treat ISO/ND as a first-pass estimate and verify with Mimo.');
-      if(m.highClip>.02) warnings.push(`Highlight clipping is substantial (${pct(m.highClip)} of analyzed pixels). Protect important highlights.`);
-      if(exp.iso>3200) warnings.push('The calculated ISO is above the preferred cinematic range. Adding light is preferable when practical.');
-      if(els.powerFrequency.value==='60' && exp.targetShutter===50) warnings.push('Under some 60 Hz LED/fluorescent fixtures, 1/50 can flicker. If you see bands/pulsing, test 1/60 and re-verify.');
-      if(els.powerFrequency.value==='50' && exp.targetShutter===60) warnings.push('Under 50 Hz lighting, test 1/50 or 1/100 if flicker appears.');
-      if(els.lensMode.value==='tele') warnings.push('D-Log 2 10-bit is a 1× mode. This prescription switches the 3× camera to standard D-Log.');
-      if(els.lensMode.value==='wide108') warnings.push('The 108° attachment widens framing; subject weighting prevents bright sky/windows at the edges from dominating the recommendation.');
-      els.warningCallout.classList.toggle('hidden',warnings.length===0);
-      els.warningCallout.innerHTML=warnings.length?`<strong>Watch-outs</strong><br>${warnings.join('<br>')}`:'';
-
-      const cctText=m.cct?`${Math.round(m.cct)} K rendered-neutral estimate`:'Not enough neutral pixels';
-      els.analysisDetails.innerHTML = [
-        metricRow('Scene classification',rec.scene),
-        metricRow('Exposure correction from current preview',`${delta>0?'+':''}${delta.toFixed(1)} stop`),
-        metricRow('Median luminance',pct(m.p50)),
-        metricRow('95th percentile',pct(m.p95)),
-        metricRow('99th percentile',pct(m.p99)),
-        metricRow('Highlight clipping',pct(m.highClip)),
-        metricRow('Shadow clipping',pct(m.shadowClip)),
-        metricRow('Tone spread (P95–P05)',pct(m.spread)),
-        metricRow('High dynamic-range warning',m.highDR?'Yes':'No'),
-        metricRow('Subject median',m.subjectMedian==null?'Not selected':pct(m.subjectMedian)),
-        metricRow('Neutral color estimate',cctText),
-        metricRow('Neutral-pixel sample',String(m.neutralCount)),
-        metricRow('Calculated exposure match error',`${exp.err.toFixed(2)} stop`),
-        metricRow('Input analysis size',`${m.w}×${m.h}`)
-      ].join('');
-
-      els.results.classList.remove('hidden'); els.verifyBtn.classList.remove('hidden');
-      els.results.scrollIntoView({behavior:'smooth',block:'start'});
-    } catch(err) {
-      alert(err.message || String(err));
+  function verifyPending(){
+    if(!pendingPrescription)return analyze(true);
+    const m=analyzeImagePixels();lastMetricsForExposure=m;const evd=exposureCorrection(m);
+    const ndKnown=els.currentNd.value!=='';const curNd=ndKnown?Number(els.currentNd.value):0,iso=Number(els.currentIso.value)||0,sh=Number(els.currentShutter.value)||0;
+    const hudMatch=sh===pendingPrescription.shutter&&iso===pendingPrescription.iso;const ndMatch=ndKnown&&curNd===pendingPrescription.nd.stops;const imageOk=Math.abs(evd.delta)<=.35&&m.highClip<.015;
+    if(hudMatch&&ndMatch&&imageOk){
+      const wbRec={wb:pendingPrescription.wb,reason:'prescribed WB; normal Mimo HUD does not expose Kelvin for verification',score:68,label:'ASSUMED APPLIED'};
+      const exp={iso:iso,nd:pendingPrescription.nd,targetShutter:sh,neutralIso:iso,achieved:0,err:0,ndKnown:true},conf=confidenceFor(m,wbRec);
+      renderPrescription({...pendingPrescription,scene:pendingPrescription.scene}, {fps:24,iso,shutter:sh,wb:pendingPrescription.wb,nd:curNd,ndKnown:true}, exp,m,wbRec,{...conf,score:Math.max(conf.score,90),label:'HIGH'},true);
+      els.actionCallout.innerHTML=`<strong>SETTINGS VERIFIED — SHOOT.</strong><br>HUD matches 1/${sh}, ISO ${iso}, ${pendingPrescription.nd.label}; live-view exposure is within the verification window and highlights are controlled. WB ${pendingPrescription.wb}K is treated as applied because Kelvin is not shown in the normal Mimo HUD.`;
+      pendingPrescription=null;verificationCandidate=false;
+    }else{
+      const exp=chooseExposure(evd.delta);
+      const wbRec={wb:pendingPrescription.wb,reason:'keep the WB prescribed from the 5600K calibration screenshot',score:68,label:'PRESCRIBED'};
+      const conf=confidenceFor(m,wbRec),current={fps:24,iso,shutter:sh,wb:pendingPrescription.wb,nd:curNd,ndKnown};
+      const corrected={...pendingPrescription,iso:exp.iso,nd:exp.nd,shutter:50,wb:pendingPrescription.wb,scene:pendingPrescription.scene};
+      renderPrescription(corrected,current,exp,m,wbRec,conf,true);
+      pendingPrescription=JSON.parse(JSON.stringify(corrected));
+      els.actionCallout.innerHTML=`<strong>Correction still needed.</strong><br>${!hudMatch?`HUD does not yet match the prior prescription. `:''}${!ndMatch?'Confirm/install the prescribed ND. ':''}${!imageOk?'The verification frame is still outside the exposure/highlight window. ':''}Updated exposure target: 1/${corrected.shutter}, ISO ${corrected.iso}, ${corrected.nd.label}. Keep WB ${corrected.wb}K from the original 5600K calibration pass, then verify again.`;
     }
   }
 
-  els.analyzeBtn.addEventListener('click',()=>analyze(false));
-  els.verifyBtn.addEventListener('click',()=>analyze(true));
+  els.analyzeBtn.addEventListener('click',()=>{verificationCandidate=false;pendingPrescription=null;analyze(false);});
+  els.verifyBtn.addEventListener('click',()=>verifyPending());
+  els.newSceneBtn.addEventListener('click',()=>{pendingPrescription=null;verificationCandidate=false;els.results.classList.add('hidden');els.verifyBtn.classList.add('hidden');els.newSceneBtn.classList.add('hidden');setStatus('Ready for a new 5600K calibration screenshot.');});
 
   function loadScript(src, test) {
     return new Promise((resolve,reject)=>{
@@ -782,6 +722,15 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     return out;
   }
 
+
+  function updateProfileAlert(parsed){
+    const issues=[];
+    if(parsed?.fps&&parsed.fps!==24)issues.push(`FPS ${parsed.fps} detected — set 24 fps.`);
+    if(parsed?.exposureMode&&parsed.exposureMode!=='M')issues.push('Set exposure mode to Manual (M).');
+    if(issues.length){els.profileAlert.innerHTML=`<strong>Fixed-profile mismatch</strong><br>${issues.join('<br>')}`;els.profileAlert.classList.remove('hidden');}
+    else {els.profileAlert.classList.add('hidden');els.profileAlert.innerHTML='';}
+  }
+
   function renderHudReadout(parsed) {
     if (!parsed || !parsed.found?.length) {
       els.mimoHudReadout.classList.add('hidden');
@@ -790,7 +739,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     lastHudRead=parsed;
     const visible=[];
     if(parsed.resolution) visible.push(parsed.resolution);
-    if(parsed.fps) visible.push(`${parsed.fps} fps`);
+    if(parsed.fps) visible.push(`${parsed.fps} fps`); else visible.push('24 fps fixed profile');
     if(parsed.exposureMode) visible.push(parsed.exposureMode==='M'?'Manual exposure':parsed.exposureMode);
     if(parsed.shutter) visible.push(`1/${parsed.shutter}`);
     if(parsed.iso) visible.push(`ISO ${parsed.iso}`);
@@ -798,8 +747,6 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     if(parsed.wb) visible.push(`${parsed.wb}K`);
     if(parsed.profile) visible.push(parsed.profile==='dlog2'?'D-Log 2':'D-Log');
     const missing=[];
-    if(!parsed.wb) missing.push('WB');
-    if(!parsed.profile) missing.push('color profile');
     missing.push('physical ND / Black Mist / 108° attachment');
     els.mimoHudReadout.innerHTML =
       `<strong>Read from Mimo HUD:</strong> ${visible.join(' • ')}`+
@@ -883,9 +830,14 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     if (!file || !image || autoOcrInProgress) return;
     autoOcrInProgress = true;
     try {
-      setStatus('First-pass settings shown below. Reading the DJI Mimo HUD to auto-fill shutter, ISO and frame rate…');
-      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',()=>!!window.Tesseract);
-      const worker=await window.Tesseract.createWorker('eng');
+      setStatus('Reading the DJI Mimo HUD for Manual mode, shutter, ISO and EV…');
+      await loadScript('./vendor/tesseract/tesseract.min.js',()=>!!window.Tesseract);
+      const ocrBase=new URL('./vendor/tesseract/', window.location.href);
+      const worker=await window.Tesseract.createWorker('eng', 1, {
+        workerPath:new URL('worker.min.js',ocrBase).href,
+        langPath:new URL('lang',ocrBase).href.replace(/\/$/,''),
+        corePath:new URL('core',ocrBase).href.replace(/\/$/,'')
+      });
 
       let parsed=await runMimoHudOcr(worker,'ccw');
       if (image.naturalHeight > image.naturalWidth && parsed.score < 3) {
@@ -897,15 +849,18 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
       if(parsed.score >= 2){
         cameraStateAutoRead = !!(parsed.shutter && parsed.iso);
         renderHudReadout(parsed);
+        updateProfileAlert(parsed);
         setStatus(`Mimo HUD read: ${parsed.found.join(' • ')}. Current camera state updated automatically.`, 'good');
-        analyze(false);
+        if(verificationCandidate&&pendingPrescription) verifyPending(); else analyze(false);
       } else {
         cameraStateAutoRead = false;
-        setStatus('Scene analyzed, but the Mimo HUD was not read confidently. Tap “Read Mimo text” or confirm shutter/ISO manually.');
+        setStatus('Mimo HUD was not read confidently. Confirm shutter/ISO manually, then recalculate.');
+        analyze(false,{preservePending:!!pendingPrescription});
       }
     } catch(err) {
       cameraStateAutoRead = false;
-      setStatus('Scene analyzed. Automatic Mimo HUD reading was unavailable; confirm shutter/ISO manually and the recommendation will still work.');
+      setStatus('Automatic Mimo HUD reading was unavailable; confirm shutter/ISO manually and recalculate.');
+      analyze(false,{preservePending:!!pendingPrescription});
     } finally {
       autoOcrInProgress = false;
     }
@@ -915,8 +870,13 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     if(!file || !image) return setStatus('Load a Mimo screenshot first.', 'bad');
     try{
       els.ocrBtn.disabled=true; setStatus('Reading DJI Mimo HUD…');
-      await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',()=>!!window.Tesseract);
-      const worker=await window.Tesseract.createWorker('eng');
+      await loadScript('./vendor/tesseract/tesseract.min.js',()=>!!window.Tesseract);
+      const ocrBase=new URL('./vendor/tesseract/', window.location.href);
+      const worker=await window.Tesseract.createWorker('eng', 1, {
+        workerPath:new URL('worker.min.js',ocrBase).href,
+        langPath:new URL('lang',ocrBase).href.replace(/\/$/,''),
+        corePath:new URL('core',ocrBase).href.replace(/\/$/,'')
+      });
       let parsed=await runMimoHudOcr(worker,'ccw');
       if(image.naturalHeight>image.naturalWidth && parsed.score<3){
         const alt=await runMimoHudOcr(worker,'cw');
@@ -925,30 +885,17 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
       await worker.terminate();
       if(parsed.score>=2){
         cameraStateAutoRead=!!(parsed.shutter&&parsed.iso);
-        renderHudReadout(parsed);
-        analyze(false);
+        renderHudReadout(parsed); updateProfileAlert(parsed);
+        if(verificationCandidate&&pendingPrescription) verifyPending(); else analyze(false,{preservePending:!!pendingPrescription});
         setStatus(`HUD found: ${parsed.found.join(' • ')}. Prescription updated automatically.`,'good');
       } else {
         setStatus('HUD OCR finished but could not confidently identify camera values. Confirm shutter/ISO manually.','');
       }
-    }catch(err){setStatus(`HUD OCR unavailable: ${err.message}. Manual camera-state entry still works.`, 'bad');}
+    }catch(err){setStatus(`Local HUD OCR unavailable: ${err.message}. Manual camera-state entry still works.`, 'bad');}
     finally{els.ocrBtn.disabled=false;}
   });
 
-  els.exifBtn.addEventListener('click', async () => {
-    if(!file) return setStatus('Load a photo first.', 'bad');
-    try{
-      els.exifBtn.disabled=true; setStatus('Loading metadata helper…');
-      await loadScript('https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.umd.js',()=>!!window.exifr);
-      const meta=await window.exifr.parse(file,{tiff:true,exif:true,ifd0:true});
-      const found=[];
-      if(meta?.ISO){els.currentIso.value=Math.round(meta.ISO);found.push(`ISO ${Math.round(meta.ISO)}`);}
-      if(meta?.ExposureTime){const d=Math.round(1/Number(meta.ExposureTime)); if(isFinite(d)&&d>0){ const opts=[...els.currentShutter.options].map(o=>Number(o.value)); const nearest=opts.reduce((a,b)=>Math.abs(b-d)<Math.abs(a-d)?b:a,opts[0]); els.currentShutter.value=String(nearest);found.push(`1/${nearest}`);}}
-      setStatus(found.length?`Metadata found: ${found.join(' • ')}. WB usually is not stored as a usable Kelvin value.`:'No useful ISO/shutter metadata found in this file.',found.length?'good':'');
-    }catch(err){setStatus(`Metadata helper unavailable: ${err.message}. Manual entry still works.`, 'bad');}
-    finally{els.exifBtn.disabled=false;}
-  });
-
+  restorePhysical();
   registerSW();
 })();
 

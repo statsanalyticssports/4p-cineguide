@@ -1,0 +1,105 @@
+name: Vendor offline OCR and publish v1.7
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-offline-ocr.yml'
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  vendor-ocr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download pinned Tesseract.js v5.1.1 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p vendor/tesseract/core vendor/tesseract/lang
+
+          curl -fL --retry 3 \
+            'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js' \
+            -o vendor/tesseract/tesseract.min.js
+          curl -fL --retry 3 \
+            'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js' \
+            -o vendor/tesseract/worker.min.js
+
+          for f in \
+            tesseract-core.wasm.js \
+            tesseract-core-simd.wasm.js \
+            tesseract-core-lstm.wasm.js \
+            tesseract-core-simd-lstm.wasm.js
+          do
+            curl -fL --retry 3 \
+              "https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1/${f}" \
+              -o "vendor/tesseract/core/${f}"
+          done
+
+          curl -fL --retry 3 \
+            'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@1.0.0/4.0.0_best_int/eng.traineddata.gz' \
+            -o vendor/tesseract/lang/eng.traineddata.gz
+
+      - name: Validate OCR bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s vendor/tesseract/tesseract.min.js
+          test -s vendor/tesseract/worker.min.js
+          test -s vendor/tesseract/lang/eng.traineddata.gz
+          test -s vendor/tesseract/core/tesseract-core.wasm.js
+          test -s vendor/tesseract/core/tesseract-core-simd.wasm.js
+          test -s vendor/tesseract/core/tesseract-core-lstm.wasm.js
+          test -s vendor/tesseract/core/tesseract-core-simd-lstm.wasm.js
+          echo 'Offline OCR bundle sizes:'
+          du -h vendor/tesseract/tesseract.min.js \
+                vendor/tesseract/worker.min.js \
+                vendor/tesseract/lang/eng.traineddata.gz \
+                vendor/tesseract/core/*.wasm.js
+
+      - name: Commit vendored OCR assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add vendor/tesseract
+          if git diff --cached --quiet; then
+            echo 'OCR assets are already vendored.'
+          else
+            git commit -m 'Bundle local Tesseract OCR assets for CineGuide v1.7'
+            git push origin HEAD:main
+          fi
+
+      - name: Create or update GitHub v1.7 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk 'BEGIN{p=0} /^## v1\.7/{p=1} /^---$/{if(p){exit}} p{print}' RELEASE_NOTES.md > /tmp/v17-notes.md
+          if gh release view v1.7 >/dev/null 2>&1; then
+            gh release edit v1.7 \
+              --title '4P CineGuide v1.7 — Fully Local Mimo OCR' \
+              --notes-file /tmp/v17-notes.md
+          else
+            gh release create v1.7 \
+              --target main \
+              --title '4P CineGuide v1.7 — Fully Local Mimo OCR' \
+              --notes-file /tmp/v17-notes.md
+          fi
+
+      - name: Request fresh GitHub Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" >/dev/null || true
