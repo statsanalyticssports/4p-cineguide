@@ -51,7 +51,7 @@ button{border:0;border-radius:12px;padding:11px 14px;font-weight:750;cursor:poin
 .action-card{display:grid;gap:8px}.hidden{display:none!important}
 .badge,.confidence{display:inline-flex;align-items:center;border-radius:999px;padding:6px 9px;font-size:.73rem;font-weight:750;background:#202a33;color:#dfe8f1;border:1px solid #33414e}.badge.soft{color:#b9c6d2;background:#171d23}
 .settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0}.setting-tile{background:#0d1115;border:1px solid #29333d;border-radius:13px;padding:11px;min-height:82px}.setting-tile small{display:block;color:#8f9ba7;text-transform:uppercase;font-size:.64rem;letter-spacing:.08em;font-weight:800}.setting-tile strong{display:block;margin-top:5px;font-size:1rem;line-height:1.2}.setting-tile .sub{display:block;color:#aab5bf;font-size:.72rem;margin-top:4px;line-height:1.3}
-.callout{border-radius:13px;padding:13px 14px;background:#122019;border:1px solid #284438;color:#d8f9e4;line-height:1.45;margin-top:10px}.callout.warning{background:#241b11;border-color:#4e3924;color:#ffe4c0}
+.callout{border-radius:13px;padding:13px 14px;background:#122019;border:1px solid #284438;color:#d8f9e4;line-height:1.45;margin-top:10px}.callout.auto-read{background:#101b24;border-color:#29465b;color:#d9efff;font-size:.86rem}.callout.auto-read strong{color:#fff}.callout.warning{background:#241b11;border-color:#4e3924;color:#ffe4c0}
 details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summary{cursor:pointer;font-weight:750;color:#dbe3eb}.analysis-details{margin-top:10px;color:#adb8c3;font-size:.82rem;line-height:1.55}.metric-row{display:flex;justify-content:space-between;gap:16px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}.metric-row span:last-child{color:#edf2f6;text-align:right}.disclaimer p{margin:.5rem 0 0;color:var(--muted);font-size:.84rem;line-height:1.5}footer{text-align:center;color:#687581;font-size:.72rem;padding:8px 16px calc(28px + env(safe-area-inset-bottom))}
 @media(max-width:720px){.grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:460px){.topbar{padding-left:14px;padding-right:14px}.grid.two,.grid.three{grid-template-columns:1fr}.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.card{padding:14px}.hero-card{padding:9px}}
@@ -139,7 +139,8 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         <h2>Current camera state</h2>
         <span class="badge soft">Exposure anchor</span>
       </div>
-      <p class="helper">For a Mimo screenshot, enter what the 4P was set to when that preview was captured. OCR can try to fill these.</p>
+      <p class="helper">For a Mimo screenshot, CineGuide now reads the visible DJI HUD automatically. Physical accessories such as ND filters and the 108° lens still require confirmation because they are not reliably encoded in the screenshot.</p>
+      <div id="mimoHudReadout" class="callout auto-read hidden"></div>
       <div class="grid three">
         <label>Current FPS
           <select id="currentFps">
@@ -153,6 +154,12 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         </label>
         <label>Current ISO
           <input id="currentIso" type="number" min="50" max="51200" step="50" value="100" />
+        </label>
+        <label>Exposure mode
+          <input id="currentExposureMode" type="text" value="—" readonly />
+        </label>
+        <label>HUD EV meter
+          <input id="currentEv" type="text" value="—" readonly />
         </label>
         <label>Current WB
           <input id="currentWb" type="number" min="2000" max="10000" step="100" value="5600" />
@@ -221,7 +228,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </section>
   </main>
 
-  <footer>4P CineGuide v1.3 • iPhone auto-analyze • no image upload to a server by the core analyzer</footer>
+  <footer>4P CineGuide v1.4 • DJI Mimo HUD auto-read • no image upload to a server by the core analyzer</footer>
 
   <script>
 (() => {
@@ -232,7 +239,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     imageInput: $('imageInput'), cameraInput: $('cameraInput'), takePhotoBtn: $('takePhotoBtn'), previewWrap: $('previewWrap'), previewCanvas: $('previewCanvas'), tapHint: $('tapHint'), clearSubject: $('clearSubject'),
     sourceType: $('sourceType'), lensMode: $('lensMode'), deliveryMode: $('deliveryMode'), targetFps: $('targetFps'), subjectMotion: $('subjectMotion'), sourceBadge: $('sourceBadge'),
     ocrBtn: $('ocrBtn'), exifBtn: $('exifBtn'), readerStatus: $('readerStatus'),
-    currentFps: $('currentFps'), currentShutter: $('currentShutter'), currentIso: $('currentIso'), currentWb: $('currentWb'), currentNd: $('currentNd'), currentProfile: $('currentProfile'),
+    currentFps: $('currentFps'), currentShutter: $('currentShutter'), currentIso: $('currentIso'), currentExposureMode: $('currentExposureMode'), currentEv: $('currentEv'), currentWb: $('currentWb'), currentNd: $('currentNd'), currentProfile: $('currentProfile'), mimoHudReadout: $('mimoHudReadout'),
     mistPreference: $('mistPreference'), powerFrequency: $('powerFrequency'),
     analyzeBtn: $('analyzeBtn'), verifyBtn: $('verifyBtn'), results: $('results'), confidencePill: $('confidencePill'), settingsGrid: $('settingsGrid'), actionCallout: $('actionCallout'), warningCallout: $('warningCallout'), analysisDetails: $('analysisDetails'), installBtn: $('installBtn')
   };
@@ -244,6 +251,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   let deferredInstall = null;
   let cameraStateAutoRead = false;
   let autoOcrInProgress = false;
+  let lastHudRead = null;
 
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const round100 = v => Math.round(v / 100) * 100;
@@ -304,7 +312,9 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
 
   function handleSelectedImage(f) {
     if (!f) return;
-    file = f; subjectPoint = null; lastRecommendation = null;
+    file = f; subjectPoint = null; lastRecommendation = null; lastHudRead = null;
+    els.mimoHudReadout.classList.add('hidden'); els.mimoHudReadout.innerHTML='';
+    els.currentExposureMode.value='—'; els.currentEv.value='—';
     const url = URL.createObjectURL(f);
     const img = new Image();
     img.onload = () => {
@@ -582,7 +592,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
         : `<strong>${verify?'Correction still recommended':'Set this, then verify with one more Mimo screenshot.'}</strong><br>${makeActionText(rec,current)}`;
 
       const warnings=[];
-      if(els.sourceType.value==='mimo' && !cameraStateAutoRead) warnings.push('FIRST PASS: CineGuide has analyzed the scene, but has not yet confirmed the visible Mimo shutter/ISO/WB. The recommendation will refresh automatically if OCR reads them. Confirm the Current camera state fields if needed.');
+      if(els.sourceType.value==='mimo' && !cameraStateAutoRead) warnings.push('FIRST PASS: CineGuide has analyzed the scene, but has not yet confirmed the visible Mimo shutter/ISO. The recommendation will refresh automatically if HUD reading succeeds. Physical ND must always be confirmed manually.');
       if(els.sourceType.value==='phone') warnings.push('Phone photo mode uses computational exposure/WB, so treat ISO/ND as a first-pass estimate and verify with Mimo.');
       if(m.highClip>.02) warnings.push(`Highlight clipping is substantial (${pct(m.highClip)} of analyzed pixels). Protect important highlights.`);
       if(exp.iso>3200) warnings.push('The calculated ISO is above the preferred cinematic range. Adding light is preferable when practical.');
@@ -631,55 +641,225 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     });
   }
 
+  function normalizeHudText(text) {
+    return (text || '')
+      .replace(/[|]/g,'I')
+      .replace(/[Oo](?=\d)/g,'0')
+      .replace(/(?<=\d)[Oo]/g,'0')
+      .replace(/\s+/g,' ')
+      .trim()
+      .toUpperCase();
+  }
+
   function parseOcrText(text) {
-    const t=text.replace(/[|]/g,'I').replace(/\s+/g,' ').toUpperCase();
-    const found=[];
-    let m=t.match(/ISO\s*[:=]?\s*(\d{2,5})/); if(m){els.currentIso.value=m[1]; found.push(`ISO ${m[1]}`);}
-    m=t.match(/1\s*[\/\\]\s*(\d{2,5})/); if(m){ const d=Number(m[1]); const opts=[...els.currentShutter.options].map(o=>Number(o.value)); const nearest=opts.reduce((a,b)=>Math.abs(b-d)<Math.abs(a-d)?b:a,opts[0]); els.currentShutter.value=String(nearest); found.push(`1/${nearest}`); }
-    m=t.match(/(?:WB|WHITE\s*BALANCE)\s*[:=]?\s*(\d{4,5})\s*K?/); if(m){els.currentWb.value=m[1]; found.push(`${m[1]}K`);}
-    m=t.match(/(24|25|30|48|50|60)\s*(?:FPS|P\b)/); if(m){els.currentFps.value=m[1]; found.push(`${m[1]}fps`);}
-    if(/D\s*[- ]?LOG\s*2/.test(t)){els.currentProfile.value='dlog2';found.push('D-Log 2');}
-    else if(/D\s*[- ]?LOG/.test(t)){els.currentProfile.value='dlog';found.push('D-Log');}
-    return found;
+    const t = normalizeHudText(text);
+    const found = [];
+    const parsed = { raw:t, resolution:null, fps:null, shutter:null, iso:null, ev:null, exposureMode:null, profile:null, wb:null };
+
+    let m = t.match(/\b4\s*K\b/);
+    if (m) { parsed.resolution='4K'; found.push('4K'); }
+
+    m = t.match(/\b4\s*K\s*[-/:]?\s*(24|25|30|48|50|60)\b/);
+    if (!m) m = t.match(/\b(24|25|30|48|50|60)\s*(?:FPS|P\b)/);
+    if (m) {
+      parsed.fps=Number(m[1]); els.currentFps.value=String(parsed.fps); found.push(`${parsed.fps}fps`);
+    }
+
+    m = t.match(/\b1\s*[\/\\I|]\s*(\d{2,5})\b/);
+    if (m) {
+      const d=Number(m[1]);
+      const opts=[...els.currentShutter.options].map(o=>Number(o.value));
+      const nearest=opts.reduce((a,b)=>Math.abs(b-d)<Math.abs(a-d)?b:a,opts[0]);
+      parsed.shutter=nearest; els.currentShutter.value=String(nearest); found.push(`1/${nearest}`);
+    }
+
+    m = t.match(/\bI?SO\s*[:=]?\s*([0-9O]{2,5})\b/);
+    if (!m) m = t.match(/\bISO\s*([0-9O]{2,5})\b/);
+    if (m) {
+      const iso=Number(m[1].replace(/O/g,'0'));
+      if (iso >= 50 && iso <= 51200) {
+        parsed.iso=iso; els.currentIso.value=String(iso); found.push(`ISO ${iso}`);
+      }
+    }
+
+    if (!parsed.iso && parsed.shutter) {
+      const r = t.match(/1\s*[\/\\I|]\s*\d{2,5}\s+(?:I?SO\s*)?([0-9O]{2,5})\s+([+\-]?\d(?:\.\d)?)/);
+      if (r) {
+        const iso=Number(r[1].replace(/O/g,'0'));
+        if (iso >= 50 && iso <= 51200) {
+          parsed.iso=iso; els.currentIso.value=String(iso); found.push(`ISO ${iso}`);
+        }
+      }
+    }
+
+    const evMatches=[...t.matchAll(/(?:^|\s)([+\-]\s*\d(?:\.\d)?)(?=\s|$)/g)];
+    if (evMatches.length) {
+      const ev=Number(evMatches[evMatches.length-1][1].replace(/\s/g,''));
+      if (isFinite(ev) && ev >= -5 && ev <= 5) {
+        parsed.ev=ev; els.currentEv.value=(ev>0?'+':'')+ev.toFixed(1); found.push(`EV ${els.currentEv.value}`);
+      }
+    }
+
+    if (/(?:^|\s)M(?:\s|$)/.test(t)) {
+      parsed.exposureMode='M'; els.currentExposureMode.value='M'; found.push('Manual');
+    } else if (/(?:^|\s)AUTO(?:\s|$)/.test(t)) {
+      parsed.exposureMode='Auto'; els.currentExposureMode.value='Auto'; found.push('Auto');
+    }
+
+    m=t.match(/(?:WB|WHITE\s*BALANCE)\s*[:=]?\s*(\d{4,5})\s*K?/);
+    if(m){els.currentWb.value=m[1]; parsed.wb=Number(m[1]); found.push(`${m[1]}K`);}
+
+    if(/D\s*[- ]?LOG\s*2/.test(t)){els.currentProfile.value='dlog2';parsed.profile='dlog2';found.push('D-Log 2');}
+    else if(/D\s*[- ]?LOG/.test(t)){els.currentProfile.value='dlog';parsed.profile='dlog';found.push('D-Log');}
+
+    parsed.found = [...new Set(found)];
+    parsed.score = [parsed.fps,parsed.shutter,parsed.iso,parsed.ev!==null,parsed.exposureMode,parsed.resolution].filter(Boolean).length;
+    return parsed;
+  }
+
+  function makeOrientedCanvas(direction='ccw') {
+    const src=image;
+    const c=document.createElement('canvas');
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    if (src.naturalWidth >= src.naturalHeight) {
+      c.width=src.naturalWidth; c.height=src.naturalHeight;
+      ctx.drawImage(src,0,0);
+      return c;
+    }
+    c.width=src.naturalHeight; c.height=src.naturalWidth;
+    if (direction==='ccw') {
+      ctx.translate(0,c.height); ctx.rotate(-Math.PI/2);
+    } else {
+      ctx.translate(c.width,0); ctx.rotate(Math.PI/2);
+    }
+    ctx.drawImage(src,0,0);
+    return c;
+  }
+
+  function drawThresholdedCrop(src, sx, sy, sw, sh, dest, dx, dy, dw, dh) {
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.max(1,Math.round(sw)); tmp.height=Math.max(1,Math.round(sh));
+    const tctx=tmp.getContext('2d',{willReadFrequently:true});
+    tctx.drawImage(src,sx,sy,sw,sh,0,0,tmp.width,tmp.height);
+    const id=tctx.getImageData(0,0,tmp.width,tmp.height);
+    const d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const lum=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2];
+      const v=lum>145?0:255;
+      d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;
+    }
+    tctx.putImageData(id,0,0);
+    dest.getContext('2d').drawImage(tmp,0,0,tmp.width,tmp.height,dx,dy,dw,dh);
+  }
+
+  function buildMimoHudOcrCanvas(direction='ccw') {
+    const src=makeOrientedCanvas(direction);
+    const W=src.width,H=src.height;
+    const left={x:0,y:H*0.12,w:W*0.18,h:H*0.39};
+    const bottom={x:W*0.36,y:H*0.84,w:W*0.30,h:H*0.16};
+    const scale=4;
+    const out=document.createElement('canvas');
+    const leftW=Math.round(left.w*scale), leftH=Math.round(left.h*scale);
+    const botW=Math.round(bottom.w*scale), botH=Math.round(bottom.h*scale);
+    out.width=Math.max(leftW,botW);
+    out.height=leftH+botH+40;
+    const octx=out.getContext('2d');
+    octx.fillStyle='#fff'; octx.fillRect(0,0,out.width,out.height);
+    drawThresholdedCrop(src,left.x,left.y,left.w,left.h,out,0,0,leftW,leftH);
+    drawThresholdedCrop(src,bottom.x,bottom.y,bottom.w,bottom.h,out,0,leftH+40,botW,botH);
+    return out;
+  }
+
+  function renderHudReadout(parsed) {
+    if (!parsed || !parsed.found?.length) {
+      els.mimoHudReadout.classList.add('hidden');
+      return;
+    }
+    lastHudRead=parsed;
+    const visible=[];
+    if(parsed.resolution) visible.push(parsed.resolution);
+    if(parsed.fps) visible.push(`${parsed.fps} fps`);
+    if(parsed.exposureMode) visible.push(parsed.exposureMode==='M'?'Manual exposure':parsed.exposureMode);
+    if(parsed.shutter) visible.push(`1/${parsed.shutter}`);
+    if(parsed.iso) visible.push(`ISO ${parsed.iso}`);
+    if(parsed.ev!==null) visible.push(`EV ${parsed.ev>0?'+':''}${parsed.ev.toFixed(1)}`);
+    if(parsed.wb) visible.push(`${parsed.wb}K`);
+    if(parsed.profile) visible.push(parsed.profile==='dlog2'?'D-Log 2':'D-Log');
+    const missing=[];
+    if(!parsed.wb) missing.push('WB');
+    if(!parsed.profile) missing.push('color profile');
+    missing.push('physical ND / Black Mist / 108° attachment');
+    els.mimoHudReadout.innerHTML =
+      `<strong>Read from Mimo HUD:</strong> ${visible.join(' • ')}`+
+      `<br><span style="color:#9fc0d8">Not visible/reliable in this screenshot: ${missing.join(', ')}. Keep those confirmed manually.</span>`;
+    els.mimoHudReadout.classList.remove('hidden');
+  }
+
+  async function runMimoHudOcr(worker, direction) {
+    const hudCanvas=buildMimoHudOcrCanvas(direction);
+    try {
+      await worker.setParameters({
+        tessedit_char_whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/.-:+ ',
+        tessedit_pageseg_mode:'6'
+      });
+    } catch (_) {}
+    const res=await worker.recognize(hudCanvas);
+    return parseOcrText(res?.data?.text||'');
   }
 
   async function autoReadMimoAndRefresh() {
-    if (!file || autoOcrInProgress) return;
+    if (!file || !image || autoOcrInProgress) return;
     autoOcrInProgress = true;
     try {
-      setStatus('First-pass settings shown below. Reading visible DJI Mimo settings to refine them…');
+      setStatus('First-pass settings shown below. Reading the DJI Mimo HUD to auto-fill shutter, ISO and frame rate…');
       await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',()=>!!window.Tesseract);
       const worker=await window.Tesseract.createWorker('eng');
-      const res=await worker.recognize(file); await worker.terminate();
-      const found=parseOcrText(res?.data?.text||'');
-      if(found.length){
-        cameraStateAutoRead = true;
-        setStatus(`Mimo settings read: ${found.join(' • ')}. Prescription updated automatically.`, 'good');
+
+      let parsed=await runMimoHudOcr(worker,'ccw');
+      if (image.naturalHeight > image.naturalWidth && parsed.score < 3) {
+        const alt=await runMimoHudOcr(worker,'cw');
+        if (alt.score > parsed.score) parsed=alt;
+      }
+      await worker.terminate();
+
+      if(parsed.score >= 2){
+        cameraStateAutoRead = !!(parsed.shutter && parsed.iso);
+        renderHudReadout(parsed);
+        setStatus(`Mimo HUD read: ${parsed.found.join(' • ')}. Current camera state updated automatically.`, 'good');
         analyze(false);
       } else {
         cameraStateAutoRead = false;
-        setStatus('Scene analyzed and settings are shown below. Mimo text was not read confidently; confirm the Current camera state fields for maximum accuracy.');
+        setStatus('Scene analyzed, but the Mimo HUD was not read confidently. Tap “Read Mimo text” or confirm shutter/ISO manually.');
       }
     } catch(err) {
       cameraStateAutoRead = false;
-      setStatus('Scene analyzed and settings are shown below. Automatic Mimo text reading was unavailable; you can still use the first-pass result or enter current settings manually.');
+      setStatus('Scene analyzed. Automatic Mimo HUD reading was unavailable; confirm shutter/ISO manually and the recommendation will still work.');
     } finally {
       autoOcrInProgress = false;
     }
   }
 
   els.ocrBtn.addEventListener('click', async () => {
-    if(!file) return setStatus('Load a Mimo screenshot first.', 'bad');
+    if(!file || !image) return setStatus('Load a Mimo screenshot first.', 'bad');
     try{
-      els.ocrBtn.disabled=true; setStatus('Loading OCR helper…');
+      els.ocrBtn.disabled=true; setStatus('Reading DJI Mimo HUD…');
       await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',()=>!!window.Tesseract);
-      setStatus('Reading screenshot text… this can take a little while on a phone.');
       const worker=await window.Tesseract.createWorker('eng');
-      const res=await worker.recognize(file); await worker.terminate();
-      const found=parseOcrText(res?.data?.text||'');
-      if(found.length){ cameraStateAutoRead = true; analyze(false); }
-      setStatus(found.length?`OCR found: ${found.join(' • ')}. Prescription updated automatically.`:'OCR finished but could not confidently identify camera values. Enter them manually.',found.length?'good':'');
-    }catch(err){setStatus(`OCR unavailable: ${err.message}. Manual camera-state entry still works.`, 'bad');}
+      let parsed=await runMimoHudOcr(worker,'ccw');
+      if(image.naturalHeight>image.naturalWidth && parsed.score<3){
+        const alt=await runMimoHudOcr(worker,'cw');
+        if(alt.score>parsed.score) parsed=alt;
+      }
+      await worker.terminate();
+      if(parsed.score>=2){
+        cameraStateAutoRead=!!(parsed.shutter&&parsed.iso);
+        renderHudReadout(parsed);
+        analyze(false);
+        setStatus(`HUD found: ${parsed.found.join(' • ')}. Prescription updated automatically.`,'good');
+      } else {
+        setStatus('HUD OCR finished but could not confidently identify camera values. Confirm shutter/ISO manually.','');
+      }
+    }catch(err){setStatus(`HUD OCR unavailable: ${err.message}. Manual camera-state entry still works.`, 'bad');}
     finally{els.ocrBtn.disabled=false;}
   });
 
