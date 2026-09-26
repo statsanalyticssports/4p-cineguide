@@ -228,7 +228,7 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     </section>
   </main>
 
-  <footer>4P CineGuide v1.4 • DJI Mimo HUD auto-read • no image upload to a server by the core analyzer</footer>
+  <footer>4P CineGuide v1.5 • improved DJI Mimo HUD auto-read • no image upload to a server by the core analyzer</footer>
 
   <script>
 (() => {
@@ -644,6 +644,8 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
   function normalizeHudText(text) {
     return (text || '')
       .replace(/[|]/g,'I')
+      .replace(/[\u2212\u2013\u2014]/g,'-')
+      .replace(/,/g,'.')
       .replace(/[Oo](?=\d)/g,'0')
       .replace(/(?<=\d)[Oo]/g,'0')
       .replace(/\s+/g,' ')
@@ -661,6 +663,9 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
 
     m = t.match(/\b4\s*K\s*[-/:]?\s*(24|25|30|48|50|60)\b/);
     if (!m) m = t.match(/\b(24|25|30|48|50|60)\s*(?:FPS|P\b)/);
+    // The DJI 4K/24 badge is tiny. OCR often returns only "24", so accept a
+    // standalone supported frame-rate when reading the dedicated Mimo HUD crop.
+    if (!m) m = t.match(/(?:^|\s)(24|25|30|48|50|60)(?=\s|$)/);
     if (m) {
       parsed.fps=Number(m[1]); els.currentFps.value=String(parsed.fps); found.push(`${parsed.fps}fps`);
     }
@@ -683,16 +688,23 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     }
 
     if (!parsed.iso && parsed.shutter) {
-      const r = t.match(/1\s*[\/\\I|]\s*\d{2,5}\s+(?:I?SO\s*)?([0-9O]{2,5})\s+([+\-]?\d(?:\.\d)?)/);
-      if (r) {
-        const iso=Number(r[1].replace(/O/g,'0'));
-        if (iso >= 50 && iso <= 51200) {
-          parsed.iso=iso; els.currentIso.value=String(iso); found.push(`ISO ${iso}`);
-        }
+      // DJI places shutter, ISO and EV on one line. The ISO icon is frequently OCR'd
+      // as junk (for example "cx", "G9" or "ig"). Instead of requiring the
+      // literal word ISO, look for the first plausible standalone ISO number after
+      // the shutter token. This reliably handles strings such as
+      // "1/80 cx 400 -2.7" while excluding the shutter denominator itself.
+      const shutterMatch=t.match(/1\s*[\/\\I|]\s*\d{2,5}/);
+      const after=shutterMatch ? t.slice((shutterMatch.index||0)+shutterMatch[0].length) : t;
+      const nums=[...after.matchAll(/(?:^|\s)([0-9O]{2,5})(?=\s|$)/g)]
+        .map(x=>Number(x[1].replace(/O/g,'0')))
+        .filter(x=>Number.isFinite(x) && x>=50 && x<=51200);
+      if(nums.length){
+        const iso=nums[0];
+        parsed.iso=iso; els.currentIso.value=String(iso); found.push(`ISO ${iso}`);
       }
     }
 
-    const evMatches=[...t.matchAll(/(?:^|\s)([+\-]\s*\d(?:\.\d)?)(?=\s|$)/g)];
+    const evMatches=[...t.matchAll(/(?:^|\s)([+\-]\s*\d(?:\s*[.]\s*\d)?)(?=\s|$)/g)];
     if (evMatches.length) {
       const ev=Number(evMatches[evMatches.length-1][1].replace(/\s/g,''));
       if (isFinite(ev) && ev >= -5 && ev <= 5) {
@@ -795,16 +807,76 @@ details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}summar
     els.mimoHudReadout.classList.remove('hidden');
   }
 
+  function buildMimoExposureOcrCanvas(direction='ccw') {
+    const src=makeOrientedCanvas(direction);
+    const W=src.width,H=src.height;
+    // Calibrated from the Pocket 4P Mimo landscape HUD: shutter / ISO / EV strip.
+    const r={x:W*0.39,y:H*0.875,w:W*0.235,h:H*0.12};
+    const scale=6;
+    const out=document.createElement('canvas');
+    out.width=Math.round(r.w*scale); out.height=Math.round(r.h*scale);
+    const octx=out.getContext('2d');
+    octx.fillStyle='#fff'; octx.fillRect(0,0,out.width,out.height);
+    // A slightly lower threshold preserves the thin minus sign and small ISO digits.
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.max(1,Math.round(r.w)); tmp.height=Math.max(1,Math.round(r.h));
+    const tctx=tmp.getContext('2d',{willReadFrequently:true});
+    tctx.drawImage(src,r.x,r.y,r.w,r.h,0,0,tmp.width,tmp.height);
+    const id=tctx.getImageData(0,0,tmp.width,tmp.height), d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const lum=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2];
+      const v=lum>120?0:255;
+      d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;
+    }
+    tctx.putImageData(id,0,0);
+    octx.drawImage(tmp,0,0,tmp.width,tmp.height,0,0,out.width,out.height);
+    return out;
+  }
+
+  function buildMimoFpsOcrCanvas(direction='ccw') {
+    const src=makeOrientedCanvas(direction);
+    const W=src.width,H=src.height;
+    const r={x:W*0.025,y:H*0.34,w:W*0.075,h:H*0.14};
+    const scale=8;
+    const out=document.createElement('canvas');
+    out.width=Math.round(r.w*scale); out.height=Math.round(r.h*scale);
+    const octx=out.getContext('2d');
+    octx.fillStyle='#fff'; octx.fillRect(0,0,out.width,out.height);
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.max(1,Math.round(r.w)); tmp.height=Math.max(1,Math.round(r.h));
+    const tctx=tmp.getContext('2d',{willReadFrequently:true});
+    tctx.drawImage(src,r.x,r.y,r.w,r.h,0,0,tmp.width,tmp.height);
+    const id=tctx.getImageData(0,0,tmp.width,tmp.height), d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const lum=0.2126*d[i]+0.7152*d[i+1]+0.0722*d[i+2];
+      const v=lum>120?0:255;
+      d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;
+    }
+    tctx.putImageData(id,0,0);
+    octx.drawImage(tmp,0,0,tmp.width,tmp.height,0,0,out.width,out.height);
+    return out;
+  }
+
   async function runMimoHudOcr(worker, direction) {
     const hudCanvas=buildMimoHudOcrCanvas(direction);
+    const exposureCanvas=buildMimoExposureOcrCanvas(direction);
+    const fpsCanvas=buildMimoFpsOcrCanvas(direction);
     try {
       await worker.setParameters({
         tessedit_char_whitelist:'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/.-:+ ',
         tessedit_pageseg_mode:'6'
       });
     } catch (_) {}
-    const res=await worker.recognize(hudCanvas);
-    return parseOcrText(res?.data?.text||'');
+    const general=await worker.recognize(hudCanvas);
+    try { await worker.setParameters({tessedit_pageseg_mode:'7'}); } catch (_) {}
+    const exposure=await worker.recognize(exposureCanvas);
+    const fps=await worker.recognize(fpsCanvas);
+    const merged=[general?.data?.text||'', exposure?.data?.text||'', fps?.data?.text||''].join(' ');
+    const parsed=parseOcrText(merged);
+    parsed.rawGeneral=normalizeHudText(general?.data?.text||'');
+    parsed.rawExposure=normalizeHudText(exposure?.data?.text||'');
+    parsed.rawFps=normalizeHudText(fps?.data?.text||'');
+    return parsed;
   }
 
   async function autoReadMimoAndRefresh() {

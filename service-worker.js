@@ -1,4 +1,4 @@
-const CACHE = "4p-cineguide-v1.4";
+const CACHE = "4p-cineguide-v1.5";
 const CORE = ["./", "./index.html", "./manifest.webmanifest"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CORE)).then(() => self.skipWaiting()));
